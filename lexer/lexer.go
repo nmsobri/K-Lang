@@ -106,8 +106,29 @@ func (l *Lexer) NextToken() token.Token {
 				l.ReadChar()
 			}
 
-			// prevent illegal number ( contain non numeric character )
-			if !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+			// integer
+			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+				num := l.source[pos:l.currentPosition]
+				// early exit. when we arrive here, we already sit at non number character
+				// and at the bottom of this function, we read next character.
+				// so we want to prevent double read of next character
+				return l.makeToken(token.INTEGER, num)
+
+				// floating point
+			} else if l.CurrentChar() == '.' && l.isNumber(l.PeekChar()) {
+				l.ReadChar() // consume the `.`
+
+				for l.isNumber(l.CurrentChar()) {
+					l.ReadChar()
+				}
+
+				num := l.source[pos:l.currentPosition]
+				return l.makeToken(token.FLOATING, num)
+				// early exit. when we arrive here, we already sit at non number character
+				// and at the bottom of this function, we read next character.
+				// so we want to prevent double read of next character
+			} else {
+				// illegal number ( contain non numeric character )
 				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
 					l.ReadChar()
 				}
@@ -118,12 +139,6 @@ func (l *Lexer) NextToken() token.Token {
 				// and at the bottom of this function, we read next character.
 				// so we want to prevent double read of next character
 			}
-
-			num := l.source[pos:l.currentPosition]
-			return l.makeToken(token.INTEGER, num)
-			// early exit. when we arrive here, we already sit at non number character
-			// and at the bottom of this function, we read next character.
-			// so we want to prevent double read of next character
 
 		} else if l.isAlphabet(l.CurrentChar()) {
 			pos := l.currentPosition
