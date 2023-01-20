@@ -49,7 +49,7 @@ func (l *Lexer) NextToken() token.Token {
 
 	case '-':
 		tok = l.makeToken(token.MINUS, string(l.CurrentChar()))
-		//
+
 	case '/':
 		tok = l.makeToken(token.SLASH, string(l.CurrentChar()))
 
@@ -95,6 +95,12 @@ func (l *Lexer) NextToken() token.Token {
 		l.readPosition++
 		return tok
 
+	case ':':
+		tok = l.makeToken(token.COLON, string(l.CurrentChar()))
+
+	case ';':
+		tok = l.makeToken(token.SEMICOLON, string(l.CurrentChar()))
+
 	case 0:
 		tok = l.makeToken(token.EOF, "EOF")
 
@@ -109,36 +115,51 @@ func (l *Lexer) NextToken() token.Token {
 			// integer
 			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
 				num := l.source[pos:l.currentPosition]
+
 				// early exit. when we arrive here, we already sit at non number character
 				// and at the bottom of this function, we read next character.
 				// so we want to prevent double read of next character
 				return l.makeToken(token.INTEGER, num)
+			}
 
-				// floating point
-			} else if l.CurrentChar() == '.' && l.isNumber(l.PeekChar()) {
+			// floating point
+			if l.CurrentChar() == '.' && l.isNumber(l.PeekChar()) {
 				l.ReadChar() // consume the `.`
 
 				for l.isNumber(l.CurrentChar()) {
 					l.ReadChar()
 				}
 
-				num := l.source[pos:l.currentPosition]
-				return l.makeToken(token.FLOATING, num)
-				// early exit. when we arrive here, we already sit at non number character
-				// and at the bottom of this function, we read next character.
-				// so we want to prevent double read of next character
-			} else {
-				// illegal number ( contain non numeric character )
+				if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+					num := l.source[pos:l.currentPosition]
+
+					// early exit. when we arrive here, we already sit at non number character
+					// and at the bottom of this function, we read next character.
+					// so we want to prevent double read of next character
+					return l.makeToken(token.FLOATING, num)
+				}
+
+				// illegal floating point ( contain non numeric character )
 				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
 					l.ReadChar()
 				}
 
-				tok = l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
-				return tok
 				// early exit. when we arrive here, we already sit at non number character
 				// and at the bottom of this function, we read next character.
 				// so we want to prevent double read of next character
+				return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
+
 			}
+
+			// illegal number ( contain non numeric character )
+			for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+				l.ReadChar()
+			}
+
+			// early exit. when we arrive here, we already sit at non number character
+			// and at the bottom of this function, we read next character.
+			// so we want to prevent double read of next character
+			return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
 
 		} else if l.isAlphabet(l.CurrentChar()) {
 			pos := l.currentPosition
@@ -147,24 +168,26 @@ func (l *Lexer) NextToken() token.Token {
 				l.ReadChar()
 			}
 
-			// prevent illegal ident ( contain non alpha numeric character like `!&^` )
-			if !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
-				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
-					l.ReadChar()
-				}
+			// identifier/keyword
+			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+				literal := l.source[pos:l.currentPosition]
+				tokType := token.LookupIdent(literal)
 
-				tok = l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
-				return tok
-				// early exit. when we arrive here, we already sit at non number character
+				// early exit. when we arrive here, we already sit at non alphabet character
 				// and at the bottom of this function, we read next character.
 				// so we want to prevent double read of next character
+				return l.makeToken(tokType, literal)
 			}
 
-			ident := l.source[pos:l.currentPosition]
-			return l.makeToken(token.IDENTIFIER, ident)
-			// early exit. when we arrive here, we already sit at non alphabet character
+			// illegal identifier/keyword ( contain non alpha numeric character like `!&^` )
+			for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+				l.ReadChar()
+			}
+
+			// early exit. when we arrive here, we already sit at non number character
 			// and at the bottom of this function, we read next character.
 			// so we want to prevent double read of next character
+			return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
 
 		} else {
 			literal := l.CurrentChar()
