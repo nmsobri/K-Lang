@@ -107,8 +107,8 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// prevent illegal number ( contain non numeric character )
-			if l.isAlphaNum(l.CurrentChar()) {
-				for l.isAlphaNum(l.CurrentChar()) {
+			if !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
 					l.ReadChar()
 				}
 
@@ -130,6 +130,19 @@ func (l *Lexer) NextToken() token.Token {
 
 			for l.isAlphaNum(l.CurrentChar()) {
 				l.ReadChar()
+			}
+
+			// prevent illegal ident ( contain non alpha numeric character like `!&^` )
+			if !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+					l.ReadChar()
+				}
+
+				tok = l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
+				return tok
+				// early exit. when we arrive here, we already sit at non number character
+				// and at the bottom of this function, we read next character.
+				// so we want to prevent double read of next character
 			}
 
 			ident := l.source[pos:l.currentPosition]
