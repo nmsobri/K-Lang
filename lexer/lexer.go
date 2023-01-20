@@ -95,6 +95,9 @@ func (l *Lexer) NextToken() token.Token {
 		l.readPosition++
 		return tok
 
+	case 0:
+		tok = l.makeToken(token.EOF, "EOF")
+
 	default:
 		if l.isNumber(l.CurrentChar()) {
 			pos := l.currentPosition
@@ -103,13 +106,17 @@ func (l *Lexer) NextToken() token.Token {
 				l.ReadChar()
 			}
 
-			if !l.isWhitespaceChar(l.CurrentChar()) {
+			// prevent illegal number ( contain non numeric character )
+			if l.isAlphaNum(l.CurrentChar()) {
 				for l.isAlphaNum(l.CurrentChar()) {
 					l.ReadChar()
 				}
 
 				tok = l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
 				return tok
+				// early exit. when we arrive here, we already sit at non number character
+				// and at the bottom of this function, we read next character.
+				// so we want to prevent double read of next character
 			}
 
 			num := l.source[pos:l.currentPosition]
@@ -186,4 +193,8 @@ func (l *Lexer) isAlphabet(char byte) bool {
 
 func (l *Lexer) isAlphaNum(char byte) bool {
 	return l.isNumber(char) || l.isAlphabet(char)
+}
+
+func (l *Lexer) isEof(ch byte) bool {
+	return ch == 0
 }
