@@ -2,7 +2,6 @@ package token
 
 const (
 	// Single character token
-	EOF     = "EOF"
 	PLUS    = "PLUS"    // `+`
 	MINUS   = "MINUS"   // `-`
 	STAR    = "STAR"    // `*`
@@ -19,8 +18,13 @@ const (
 	LESSER_EQUAL  = "LESSER_EQUAL"  // `<=`
 
 	// Multiple character token
-	INTEGER  = "INTEGER"  // `[0-9]`
-	FLOATING = "FLOATING" // `[0-9]\.[0-9]`
+	INTEGER    = "INTEGER"    // `[0-9]`
+	FLOATING   = "FLOATING"   // `[0-9]\.[0-9]`
+	IDENTIFIER = "IDENTIFIER" // `[0-9]\.[0-9]`
+
+	// Special token
+	EOF     = "EOF"
+	ILLEGAL = "ILLEGAL"
 )
 
 type TokenType string

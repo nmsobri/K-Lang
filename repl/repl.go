@@ -25,13 +25,12 @@ func Start() {
 		}
 
 		input := scanner.Text()
-
 		l := lexer.New(input)
 
-		for l.CurrentToken.Type != token.EOF {
-			fmt.Println(l.CurrentToken)
-			// fmt.Println(l.PeekToken)
-			l.NextToken()
+		tok := l.NextToken()
+		for tok.Type != token.EOF {
+			fmt.Println(tok)
+			tok = l.NextToken()
 		}
 	}
 }
