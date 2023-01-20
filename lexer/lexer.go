@@ -19,88 +19,77 @@ func New(source string) *Lexer {
 		currentChar:     0,
 	}
 
+	lex.ReadChar()
+
 	return lex
 }
 
-func (l *Lexer) ReadChar() byte {
+func (l *Lexer) ReadChar() {
 	if l.readPosition >= len(l.source) {
-		return 0
+		l.currentChar = 0
+	} else {
+		l.currentChar = l.source[l.readPosition]
 	}
-
-	l.currentChar = l.source[l.readPosition]
 
 	l.currentPosition = l.readPosition
 	l.readPosition++
-	return l.currentChar
 }
 
 func (l *Lexer) NextToken() token.Token {
-	if l.readPosition >= len(l.source) {
+	if l.readPosition > len(l.source) {
 		return l.makeToken(token.EOF, "EOF")
 	}
 
+	var tok token.Token
 	l.skipWhitespaceChar()
 
-	switch l.ReadChar() {
+	switch l.CurrentChar() {
 	case '+':
-		return l.makeToken(token.PLUS, string(l.CurrentChar()))
+		tok = l.makeToken(token.PLUS, string(l.CurrentChar()))
 
 	case '-':
-		return l.makeToken(token.MINUS, string(l.CurrentChar()))
-
+		tok = l.makeToken(token.MINUS, string(l.CurrentChar()))
+		//
 	case '/':
-		return l.makeToken(token.SLASH, string(l.CurrentChar()))
+		tok = l.makeToken(token.SLASH, string(l.CurrentChar()))
 
 	case '*':
-		return l.makeToken(token.STAR, string(l.CurrentChar()))
+		tok = l.makeToken(token.STAR, string(l.CurrentChar()))
 
 	case '!':
-		var tok token.Token
-
 		if l.isPeekChar('=') {
-			l.readPosition++
-			tok = l.makeToken(token.EQUAL_NOT, string(l.source[l.readPosition]))
+			l.ReadChar()
+			tok = l.makeToken(token.EQUAL_NOT, string(l.source[l.currentPosition-1:l.readPosition]))
 		} else {
-			tok = l.makeToken(token.BANG, string(l.source[l.readPosition]))
+			tok = l.makeToken(token.BANG, string(l.CurrentChar()))
 		}
 
 		l.readPosition++
 		return tok
 
 	case '=':
-		var tok token.Token
-
 		if l.isPeekChar('=') {
-			pos := l.readPosition
-			l.readPosition++
-			tok = l.makeToken(token.EQUAL, string(l.source[pos:l.readPosition+1]))
+			l.ReadChar()
+			tok = l.makeToken(token.EQUAL, string(l.source[l.currentPosition-1:l.readPosition]))
 		} else {
-			tok = l.makeToken(token.ASSIGN, string(l.source[l.readPosition]))
+			tok = l.makeToken(token.ASSIGN, string(l.CurrentChar()))
 		}
-
-		l.readPosition++
-		return tok
 
 	case '>':
-		var tok token.Token
-
 		if l.isPeekChar('=') {
-			l.readPosition++
-			tok = l.makeToken(token.GREATER_EQUAL, string(l.source[l.readPosition]))
+			l.ReadChar()
+			tok = l.makeToken(token.GREATER_EQUAL, string(l.source[l.currentPosition-1:l.readPosition]))
 		} else {
-			tok = l.makeToken(token.GREATER, string(l.source[l.readPosition]))
+			tok = l.makeToken(token.GREATER, string(l.CurrentChar()))
 		}
-
-		l.readPosition++
-		return tok
 
 	case '<':
 		var tok token.Token
 		if l.isPeekChar('=') {
-			l.readPosition++
-			tok = l.makeToken(token.LESSER_EQUAL, string(l.source[l.readPosition]))
+			l.ReadChar()
+			tok = l.makeToken(token.LESSER_EQUAL, string(l.source[l.currentPosition-1:l.readPosition]))
 		} else {
-			tok = l.makeToken(token.LESSER, string(l.source[l.readPosition]))
+			tok = l.makeToken(token.LESSER, string(l.CurrentChar()))
 		}
 
 		l.readPosition++
@@ -108,28 +97,48 @@ func (l *Lexer) NextToken() token.Token {
 
 	default:
 		if l.isNumber(l.CurrentChar()) {
-			pos := l.readPosition
+			pos := l.currentPosition
 
 			for l.isNumber(l.CurrentChar()) {
-				l.readPosition++
+				l.ReadChar()
 			}
 
-			num := l.source[pos:l.readPosition]
+			if !l.isWhitespaceChar(l.CurrentChar()) {
+				for l.isAlphaNum(l.CurrentChar()) {
+					l.ReadChar()
+				}
+
+				tok = l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
+				return tok
+			}
+
+			num := l.source[pos:l.currentPosition]
 			return l.makeToken(token.INTEGER, num)
+			// early exit. when we arrive here, we already sit at non number character
+			// and at the bottom of this function, we read next character.
+			// so we want to prevent double read of next character
 
 		} else if l.isAlphabet(l.CurrentChar()) {
-			pos := l.readPosition
+			pos := l.currentPosition
 
 			for l.isAlphaNum(l.CurrentChar()) {
-				l.readPosition++
+				l.ReadChar()
 			}
 
-			identifier := l.source[pos:l.readPosition]
-			return l.makeToken(token.IDENTIFIER, identifier)
-		}
+			ident := l.source[pos:l.currentPosition]
+			return l.makeToken(token.IDENTIFIER, ident)
+			// early exit. when we arrive here, we already sit at non alphabet character
+			// and at the bottom of this function, we read next character.
+			// so we want to prevent double read of next character
 
-		return l.makeToken(token.ILLEGAL, "ILLEGAL")
+		} else {
+			literal := l.CurrentChar()
+			tok = l.makeToken(token.ILLEGAL, string(literal))
+		}
 	}
+
+	l.ReadChar()
+	return tok
 }
 
 func (l *Lexer) makeToken(tokenType token.TokenType, literal string) token.Token {
@@ -137,7 +146,7 @@ func (l *Lexer) makeToken(tokenType token.TokenType, literal string) token.Token
 }
 
 func (l *Lexer) isPeekChar(char byte) bool {
-	if l.readPosition+1 >= len(l.source) {
+	if l.readPosition >= len(l.source) {
 		return false
 	}
 
@@ -145,11 +154,11 @@ func (l *Lexer) isPeekChar(char byte) bool {
 }
 
 func (l *Lexer) PeekChar() byte {
-	if l.readPosition+1 >= len(l.source) {
+	if l.readPosition >= len(l.source) {
 		return 0
 	}
 
-	return l.source[l.readPosition+1]
+	return l.source[l.readPosition]
 }
 
 func (l *Lexer) CurrentChar() byte {
@@ -157,12 +166,14 @@ func (l *Lexer) CurrentChar() byte {
 }
 
 func (l *Lexer) skipWhitespaceChar() {
-	for l.CurrentChar() == ' ' || l.CurrentChar() == '\t' ||
-		l.CurrentChar() == '\n' || l.CurrentChar() == '\r' ||
-		l.CurrentChar() == '\f' || l.CurrentChar() == '\v' {
-		l.readPosition++
+	for l.isWhitespaceChar(l.CurrentChar()) {
+		l.ReadChar()
 	}
+}
 
+func (l *Lexer) isWhitespaceChar(ch byte) bool {
+	return ch == ' ' || ch == '\t' || ch == '\n' ||
+		ch == '\r' || ch == '\f' || ch == '\v'
 }
 
 func (l *Lexer) isNumber(char byte) bool {
@@ -170,7 +181,7 @@ func (l *Lexer) isNumber(char byte) bool {
 }
 
 func (l *Lexer) isAlphabet(char byte) bool {
-	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')
+	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || (char == '_')
 }
 
 func (l *Lexer) isAlphaNum(char byte) bool {
