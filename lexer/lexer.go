@@ -64,9 +64,6 @@ func (l *Lexer) NextToken() token.Token {
 			tok = l.makeToken(token.BANG, string(l.CurrentChar()))
 		}
 
-		l.readPosition++
-		return tok
-
 	case '=':
 		if l.isPeekChar('=') {
 			l.ReadChar()
@@ -84,16 +81,12 @@ func (l *Lexer) NextToken() token.Token {
 		}
 
 	case '<':
-		var tok token.Token
 		if l.isPeekChar('=') {
 			l.ReadChar()
 			tok = l.makeToken(token.LESSER_EQUAL, string(l.source[l.currentPosition-1:l.readPosition]))
 		} else {
 			tok = l.makeToken(token.LESSER, string(l.CurrentChar()))
 		}
-
-		l.readPosition++
-		return tok
 
 	case ':':
 		tok = l.makeToken(token.COLON, string(l.CurrentChar()))
@@ -113,7 +106,7 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// integer
-			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
 				num := l.source[pos:l.currentPosition]
 
 				// early exit. when we arrive here, we already sit at non number character
@@ -130,7 +123,7 @@ func (l *Lexer) NextToken() token.Token {
 					l.ReadChar()
 				}
 
-				if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+				if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
 					num := l.source[pos:l.currentPosition]
 
 					// early exit. when we arrive here, we already sit at non number character
@@ -169,7 +162,7 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// identifier/keyword
-			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) {
+			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
 				literal := l.source[pos:l.currentPosition]
 				tokType := token.LookupIdent(literal)
 
@@ -248,4 +241,8 @@ func (l *Lexer) isAlphaNum(char byte) bool {
 
 func (l *Lexer) isEof(ch byte) bool {
 	return ch == 0
+}
+
+func (l *Lexer) isTerminator(ch byte) bool {
+	return ch == ';'
 }
