@@ -1,8 +1,9 @@
 package repl
 
 import (
+	// "Klang/ast"
 	"Klang/lexer"
-	"Klang/token"
+	"Klang/parser"
 	"bufio"
 	"fmt"
 	"log"
@@ -13,7 +14,6 @@ const PROMPT = ">> "
 
 func Start() {
 	fmt.Println("Welcome To K Programming Language")
-
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -26,11 +26,13 @@ func Start() {
 
 		input := scanner.Text()
 		l := lexer.New(input)
+		p := parser.New(l)
+		program := p.ParseProgram()
 
-		tok := l.NextToken()
-		for tok.Type != token.EOF {
-			fmt.Println(tok)
-			tok = l.NextToken()
+		for _, stmt := range program.Statements {
+			// integ, _ := stmt.(*ast.ExpressionStatement)
+			// fmt.Println(integ.Expression.String())
+			fmt.Println(stmt.String())
 		}
 	}
 }
