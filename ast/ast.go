@@ -153,3 +153,108 @@ func (fl *FloatLiteral) String() string {
 }
 
 func (fl *FloatLiteral) Expression() {}
+
+//-----------------------------
+// Boolean Literal Expression
+//-----------------------------
+type BooleanLiteral struct {
+	Token token.Token
+	Value bool
+}
+
+func (bl *BooleanLiteral) TokenLiteral() string {
+	return bl.Token.Literal
+}
+
+func (bl *BooleanLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(fmt.Sprintf("%t", bl.Value))
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (bl *BooleanLiteral) Expression() {}
+
+//-----------------------------
+// Infix Expression
+//-----------------------------
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(ie.Operator)
+	out.WriteString(ie.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (ie *InfixExpression) Expression() {}
+
+type IfExpression struct {
+	Token     token.Token
+	Condition Expression
+	IfArm     *BlockStatement
+	ElseArm   *BlockStatement
+}
+
+func (ife *IfExpression) TokenLiteral() string {
+	return ife.Token.Literal
+}
+
+func (ife *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ife.Token.Literal)
+	out.WriteString(ife.Condition.String())
+	out.WriteString(ife.IfArm.String())
+
+	if ife.ElseArm != nil {
+		out.WriteString("else")
+		out.WriteString(ife.ElseArm.String())
+	}
+
+	return out.String()
+}
+
+func (ife *IfExpression) Expression() {}
+
+type BlockStatement struct {
+	Token      token.Token // the `{`
+	Statements []Statement
+}
+
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+
+	for _, stmt := range bs.Statements {
+		out.WriteString(stmt.String())
+	}
+
+	out.WriteString("}")
+
+	return out.String()
+}
+
+func (bs *BlockStatement) Expression() {}

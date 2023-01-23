@@ -1,7 +1,6 @@
 package repl
 
 import (
-	// "Klang/ast"
 	"Klang/lexer"
 	"Klang/parser"
 	"bufio"
@@ -30,8 +29,6 @@ func Start() {
 		program := p.ParseProgram()
 
 		for _, stmt := range program.Statements {
-			// integ, _ := stmt.(*ast.ExpressionStatement)
-			// fmt.Println(integ.Expression.String())
 			fmt.Println(stmt.String())
 		}
 	}

@@ -12,6 +12,8 @@ const (
 	BANG      = "BANG"      // `!`
 	SEMICOLON = "SEMICOLON" // `;`
 	COLON     = "COLON"     // `:`
+	LBRACE    = "LBRACE"    // `{`
+	RBRACE    = "RBRACE"    // `}`
 
 	// Double character token
 	EQUAL         = "EQUAL"         // `==`

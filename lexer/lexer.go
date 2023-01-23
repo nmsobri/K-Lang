@@ -56,6 +56,12 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = l.makeToken(token.STAR, string(l.CurrentChar()))
 
+	case '{':
+		tok = l.makeToken(token.LBRACE, string(l.CurrentChar()))
+
+	case '}':
+		tok = l.makeToken(token.RBRACE, string(l.CurrentChar()))
+
 	case '!':
 		if l.isPeekChar('=') {
 			l.ReadChar()

@@ -11,6 +11,8 @@ func TestNextToken(t *testing.T) {
     -
     /
     *
+    {
+    }
     !
     !=
     =
@@ -51,6 +53,8 @@ func TestNextToken(t *testing.T) {
 		{token.MINUS, "-"},
 		{token.SLASH, "/"},
 		{token.STAR, "*"},
+		{token.LBRACE, "{"},
+		{token.RBRACE, "}"},
 		{token.BANG, "!"},
 		{token.EQUAL_NOT, "!="},
 		{token.ASSIGN, "="},
