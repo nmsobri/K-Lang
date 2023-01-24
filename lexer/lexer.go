@@ -62,6 +62,12 @@ func (l *Lexer) NextToken() token.Token {
 	case '}':
 		tok = l.makeToken(token.RBRACE, string(l.CurrentChar()))
 
+	case '(':
+		tok = l.makeToken(token.LPAREN, string(l.CurrentChar()))
+
+	case ')':
+		tok = l.makeToken(token.RPAREN, string(l.CurrentChar()))
+
 	case '!':
 		if l.isPeekChar('=') {
 			l.ReadChar()
@@ -112,7 +118,7 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// integer
-			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
+			if l.isNumberTerminator(l.CurrentChar()) {
 				num := l.source[pos:l.currentPosition]
 
 				// early exit. when we arrive here, we already sit at non number character
@@ -129,7 +135,7 @@ func (l *Lexer) NextToken() token.Token {
 					l.ReadChar()
 				}
 
-				if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
+				if l.isNumberTerminator(l.CurrentChar()) {
 					num := l.source[pos:l.currentPosition]
 
 					// early exit. when we arrive here, we already sit at non number character
@@ -139,7 +145,7 @@ func (l *Lexer) NextToken() token.Token {
 				}
 
 				// illegal floating point ( contain non numeric character )
-				for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+				for !l.isNumberTerminator(l.CurrentChar()) {
 					l.ReadChar()
 				}
 
@@ -150,8 +156,8 @@ func (l *Lexer) NextToken() token.Token {
 
 			}
 
-			// illegal number ( contain non numeric character )
-			for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+			// illegal number ( contain non numeric character ), read remaining character to build illegal token
+			for !l.isNumberTerminator(l.CurrentChar()) {
 				l.ReadChar()
 			}
 
@@ -168,7 +174,7 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// identifier/keyword
-			if l.isWhitespaceChar(l.CurrentChar()) || l.isEof(l.CurrentChar()) || l.isTerminator(l.CurrentChar()) {
+			if l.isIdentifierTerminator(l.CurrentChar()) {
 				literal := l.source[pos:l.currentPosition]
 				tokType := token.LookupIdent(literal)
 
@@ -178,8 +184,9 @@ func (l *Lexer) NextToken() token.Token {
 				return l.makeToken(tokType, literal)
 			}
 
-			// illegal identifier/keyword ( contain non alpha numeric character like `!&^` )
-			for !l.isWhitespaceChar(l.CurrentChar()) && !l.isEof(l.CurrentChar()) {
+			// illegal identifier/keyword ( contain non alpha numeric character like `!&^` ), read remaning char
+			// for building illegal token
+			for !l.isIdentifierTerminator(l.CurrentChar()) {
 				l.ReadChar()
 			}
 
@@ -249,6 +256,17 @@ func (l *Lexer) isEof(ch byte) bool {
 	return ch == 0
 }
 
-func (l *Lexer) isTerminator(ch byte) bool {
-	return ch == ';'
+func (l *Lexer) isNumberTerminator(ch byte) bool {
+	if l.isWhitespaceChar(ch) || l.isEof(ch) || ch == ';' {
+		return true
+	}
+
+	return false
+}
+
+func (l *Lexer) isIdentifierTerminator(ch byte) bool {
+	if l.isWhitespaceChar(ch) || l.isEof(ch) || ch == ';' || ch == '(' {
+		return true
+	}
+	return false
 }
