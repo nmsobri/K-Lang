@@ -5,7 +5,6 @@ import (
 	"Klang/parser"
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -17,10 +16,10 @@ func Start() {
 
 	for {
 		fmt.Print(PROMPT)
-		scanner.Scan()
+		scanned := scanner.Scan()
 
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
+		if !scanned {
+			return
 		}
 
 		input := scanner.Text()

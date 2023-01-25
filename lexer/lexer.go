@@ -68,6 +68,9 @@ func (l *Lexer) NextToken() token.Token {
 	case ')':
 		tok = l.makeToken(token.RPAREN, string(l.CurrentChar()))
 
+	case ',':
+		tok = l.makeToken(token.COMMA, string(l.CurrentChar()))
+
 	case '!':
 		if l.isPeekChar('=') {
 			l.ReadChar()
@@ -117,8 +120,36 @@ func (l *Lexer) NextToken() token.Token {
 				l.ReadChar()
 			}
 
-			// integer
-			if l.isNumberTerminator(l.CurrentChar()) {
+			// floating point
+			if l.CurrentChar() == '.' {
+				l.ReadChar() // advance to next char after `.`
+
+				if l.isNumber(l.CurrentChar()) {
+
+					for l.isNumber(l.CurrentChar()) {
+						l.ReadChar()
+					}
+
+					num := l.source[pos:l.currentPosition]
+
+					// early exit. when we arrive here, we already sit at non number character
+					// and at the bottom of this function, we read next character.
+					// so we want to prevent double read of next character
+					return l.makeToken(token.FLOATING, num)
+
+				} else {
+					// illegal floating point ( contain non numeric character )
+					for l.isAlphaNum(l.CurrentChar()) {
+						l.ReadChar()
+					}
+
+					// early exit. when we arrive here, we already sit at non number character
+					// and at the bottom of this function, we read next character.
+					// so we want to prevent double read of next character
+					return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
+				}
+			} else {
+				// integer
 				num := l.source[pos:l.currentPosition]
 
 				// early exit. when we arrive here, we already sit at non number character
@@ -126,45 +157,6 @@ func (l *Lexer) NextToken() token.Token {
 				// so we want to prevent double read of next character
 				return l.makeToken(token.INTEGER, num)
 			}
-
-			// floating point
-			if l.CurrentChar() == '.' && l.isNumber(l.PeekChar()) {
-				l.ReadChar() // consume the `.`
-
-				for l.isNumber(l.CurrentChar()) {
-					l.ReadChar()
-				}
-
-				if l.isNumberTerminator(l.CurrentChar()) {
-					num := l.source[pos:l.currentPosition]
-
-					// early exit. when we arrive here, we already sit at non number character
-					// and at the bottom of this function, we read next character.
-					// so we want to prevent double read of next character
-					return l.makeToken(token.FLOATING, num)
-				}
-
-				// illegal floating point ( contain non numeric character )
-				for !l.isNumberTerminator(l.CurrentChar()) {
-					l.ReadChar()
-				}
-
-				// early exit. when we arrive here, we already sit at non number character
-				// and at the bottom of this function, we read next character.
-				// so we want to prevent double read of next character
-				return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
-
-			}
-
-			// illegal number ( contain non numeric character ), read remaining character to build illegal token
-			for !l.isNumberTerminator(l.CurrentChar()) {
-				l.ReadChar()
-			}
-
-			// early exit. when we arrive here, we already sit at non number character
-			// and at the bottom of this function, we read next character.
-			// so we want to prevent double read of next character
-			return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
 
 		} else if l.isAlphabet(l.CurrentChar()) {
 			pos := l.currentPosition
@@ -174,27 +166,13 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			// identifier/keyword
-			if l.isIdentifierTerminator(l.CurrentChar()) {
-				literal := l.source[pos:l.currentPosition]
-				tokType := token.LookupIdent(literal)
+			literal := l.source[pos:l.currentPosition]
+			tokType := token.LookupIdent(literal)
 
-				// early exit. when we arrive here, we already sit at non alphabet character
-				// and at the bottom of this function, we read next character.
-				// so we want to prevent double read of next character
-				return l.makeToken(tokType, literal)
-			}
-
-			// illegal identifier/keyword ( contain non alpha numeric character like `!&^` ), read remaning char
-			// for building illegal token
-			for !l.isIdentifierTerminator(l.CurrentChar()) {
-				l.ReadChar()
-			}
-
-			// early exit. when we arrive here, we already sit at non number character
+			// early exit. when we arrive here, we already sit at non alphabet character
 			// and at the bottom of this function, we read next character.
 			// so we want to prevent double read of next character
-			return l.makeToken(token.ILLEGAL, string(l.source[pos:l.currentPosition]))
-
+			return l.makeToken(tokType, literal)
 		} else {
 			literal := l.CurrentChar()
 			tok = l.makeToken(token.ILLEGAL, string(literal))
@@ -250,23 +228,4 @@ func (l *Lexer) isAlphabet(char byte) bool {
 
 func (l *Lexer) isAlphaNum(char byte) bool {
 	return l.isNumber(char) || l.isAlphabet(char)
-}
-
-func (l *Lexer) isEof(ch byte) bool {
-	return ch == 0
-}
-
-func (l *Lexer) isNumberTerminator(ch byte) bool {
-	if l.isWhitespaceChar(ch) || l.isEof(ch) || ch == ';' {
-		return true
-	}
-
-	return false
-}
-
-func (l *Lexer) isIdentifierTerminator(ch byte) bool {
-	if l.isWhitespaceChar(ch) || l.isEof(ch) || ch == ';' || ch == '(' {
-		return true
-	}
-	return false
 }

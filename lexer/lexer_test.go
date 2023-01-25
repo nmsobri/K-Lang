@@ -15,6 +15,7 @@ func TestNextToken(t *testing.T) {
     }
     (
     )
+    ,
     !
     !=
     =
@@ -59,6 +60,7 @@ func TestNextToken(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.LPAREN, "("},
 		{token.RPAREN, ")"},
+		{token.COMMA, ","},
 		{token.BANG, "!"},
 		{token.EQUAL_NOT, "!="},
 		{token.ASSIGN, "="},
@@ -102,9 +104,11 @@ func TestNextToken(t *testing.T) {
 		{token.IDENTIFIER, "foobar"},
 		{token.SEMICOLON, ";"},
 
-		{token.ILLEGAL, "99foo"},
+		{token.INTEGER, "99"},
+		{token.IDENTIFIER, "foo"},
 		{token.ILLEGAL, "55.xx"},
-		{token.ILLEGAL, "55.67xx"},
+		{token.FLOATING, "55.67"},
+		{token.IDENTIFIER, "xx"},
 		{token.EOF, "EOF"},
 	}
 

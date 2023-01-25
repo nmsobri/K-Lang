@@ -48,6 +48,8 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.TRUE, p.parseBoolean)
 	p.registerPrefixFunction(token.FALSE, p.parseBoolean)
 	p.registerPrefixFunction(token.IF, p.parseIfExpression)
+	p.registerPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
+	p.registerPrefixFunction(token.FUNCTION, p.parseFunction)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
@@ -104,6 +106,9 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.CurrentToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+
+	case token.WHILE:
+		return p.parseWhileStatement()
 
 	case token.RETURN:
 		return p.parseReturnStatement()
@@ -295,7 +300,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return ifExpr
 }
 
-// TODO continue here
 func (p *Parser) parseBlockStatement() ast.Expression {
 	block := &ast.BlockStatement{Token: p.CurrentToken}
 	block.Statements = []ast.Statement{}
@@ -313,4 +317,67 @@ func (p *Parser) parseBlockStatement() ast.Expression {
 	}
 
 	return block
+}
+
+func (p *Parser) parseWhileStatement() ast.Statement {
+	whileStmt := &ast.WhileStatement{Token: p.CurrentToken}
+
+	p.NextToken() // advance to `while` condition
+
+	whileStmt.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	whileStmt.Body = p.parseBlockStatement().(*ast.BlockStatement)
+
+	return whileStmt
+}
+
+func (p *Parser) parseFunction() ast.Expression {
+	fnExpr := &ast.FunctionExpression{Token: p.CurrentToken}
+
+	// fn () { foo }
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	p.NextToken() // advance to function params
+
+	fnExpr.Parameters = p.parseExpressionList()
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	fnExpr.Body = p.parseBlockStatement().(*ast.BlockStatement)
+
+	return fnExpr
+}
+
+func (p *Parser) parseExpressionList() *ast.ExpressionList {
+	exprList := &ast.ExpressionList{Token: p.CurrentToken}
+	exprList.List = []ast.Expression{}
+
+	if p.currentTokenIs(token.RPAREN) {
+		return exprList
+	}
+
+	expr := p.parseExpression(LOWEST)
+	exprList.List = append(exprList.List, expr)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.NextToken() // consume the `,` token
+		p.NextToken() // advance to next expression in the list of expression
+		expr = p.parseExpression(LOWEST)
+		exprList.List = append(exprList.List, expr)
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return exprList
 }

@@ -14,6 +14,9 @@ const (
 	COLON     = "COLON"     // `:`
 	LBRACE    = "LBRACE"    // `{`
 	RBRACE    = "RBRACE"    // `}`
+	LPAREN    = "LPAREN"    // `(`
+	RPAREN    = "RPAREN"    // `)`
+	COMMA     = "COMMA"     // `,`
 
 	// Double character token
 	EQUAL         = "EQUAL"         // `==`
@@ -38,6 +41,7 @@ const (
 	FALSE    = "FALSE"
 	IF       = "IF"
 	ELSE     = "ELSE"
+	WHILE    = "WHILE"
 )
 
 var keywords = map[string]TokenType{
@@ -48,6 +52,7 @@ var keywords = map[string]TokenType{
 	"false":  FALSE,
 	"if":     IF,
 	"else":   ELSE,
+	"while":  WHILE,
 }
 
 type TokenType string

@@ -4,6 +4,7 @@ import (
 	"Klang/token"
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Node interface {
@@ -206,6 +207,9 @@ func (ie *InfixExpression) String() string {
 
 func (ie *InfixExpression) Expression() {}
 
+//-----------------------------
+// If Expression
+//-----------------------------
 type IfExpression struct {
 	Token     token.Token
 	Condition Expression
@@ -234,6 +238,9 @@ func (ife *IfExpression) String() string {
 
 func (ife *IfExpression) Expression() {}
 
+//-----------------------------
+// Block Statement
+//-----------------------------
 type BlockStatement struct {
 	Token      token.Token // the `{`
 	Statements []Statement
@@ -258,3 +265,88 @@ func (bs *BlockStatement) String() string {
 }
 
 func (bs *BlockStatement) Expression() {}
+
+//-----------------------------
+// While Statement
+//-----------------------------
+type WhileStatement struct {
+	Token     token.Token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (ws *WhileStatement) TokenLiteral() string {
+	return ws.Token.Literal
+}
+
+func (ws *WhileStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ws.Token.Literal)
+	out.WriteString(ws.Condition.String())
+	out.WriteString("{")
+	out.WriteString(ws.Body.String())
+	out.WriteString("}")
+
+	return out.String()
+}
+
+func (ws *WhileStatement) Statement() {}
+
+//-----------------------------
+// Function Expression
+//-----------------------------
+type FunctionExpression struct {
+	Token      token.Token
+	Parameters *ExpressionList
+	Body       *BlockStatement
+}
+
+func (fs *FunctionExpression) TokenLiteral() string {
+	return fs.Token.Literal
+}
+
+func (fs *FunctionExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(fs.Token.Literal)
+	out.WriteString("(")
+	out.WriteString(fs.Parameters.String())
+	out.WriteString(")")
+	// out.WriteString(fs.Body.String())
+
+	return out.String()
+}
+
+func (fs *FunctionExpression) Expression() {}
+
+//-----------------------------
+// Expression List
+//-----------------------------
+type ExpressionList struct {
+	Token token.Token // the `(` token
+	List  []Expression
+}
+
+func (el *ExpressionList) TokenLiteral() string {
+	return el.Token.Literal
+}
+
+func (el *ExpressionList) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+
+	args := []string{}
+	for _, stmt := range el.List {
+		args = append(args, stmt.String())
+	}
+
+	out.WriteString(strings.Join(args, ", "))
+
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (el *ExpressionList) Expression() {}
