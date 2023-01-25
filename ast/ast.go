@@ -297,37 +297,37 @@ func (ws *WhileStatement) Statement() {}
 // -----------------------------
 // Function Literal Expression
 // -----------------------------
-type FunctionExpression struct {
+type FunctionLiteralExpression struct {
 	Token      token.Token
 	Parameters []Identifier
 	Body       *BlockStatement
 }
 
-func (fe *FunctionExpression) TokenLiteral() string {
-	return fe.Token.Literal
+func (fle *FunctionLiteralExpression) TokenLiteral() string {
+	return fle.Token.Literal
 }
 
-func (fe *FunctionExpression) String() string {
+func (fle *FunctionLiteralExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(fe.Token.Literal)
+	out.WriteString(fle.Token.Literal)
 	out.WriteString("(")
 
 	params := []string{}
 
-	for _, param := range fe.Parameters {
+	for _, param := range fle.Parameters {
 		params = append(params, param.String())
 	}
 
 	out.WriteString(strings.Join(params, ", "))
 
 	out.WriteString(")")
-	out.WriteString(fe.Body.String())
+	out.WriteString(fle.Body.String())
 
 	return out.String()
 }
 
-func (fe *FunctionExpression) Expression() {}
+func (fe *FunctionLiteralExpression) Expression() {}
 
 // -----------------------------
 // Expression List
@@ -369,18 +369,18 @@ type FunctionCallExpression struct {
 	Args     *ExpressionList
 }
 
-func (fc *FunctionCallExpression) TokenLiteral() string {
-	return fc.Token.Literal
+func (fce *FunctionCallExpression) TokenLiteral() string {
+	return fce.Token.Literal
 }
 
-func (fc *FunctionCallExpression) String() string {
+func (fce *FunctionCallExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(fc.Function.String())
+	out.WriteString(fce.Function.String())
 	out.WriteString("(")
 
 	args := []string{}
-	for _, expr := range fc.Args.List {
+	for _, expr := range fce.Args.List {
 		args = append(args, expr.String())
 	}
 
@@ -390,4 +390,4 @@ func (fc *FunctionCallExpression) String() string {
 	return out.String()
 }
 
-func (fc *FunctionCallExpression) Expression() {}
+func (fce *FunctionCallExpression) Expression() {}

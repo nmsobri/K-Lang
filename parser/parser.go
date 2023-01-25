@@ -51,7 +51,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.FALSE, p.parseBoolean)
 	p.registerPrefixFunction(token.IF, p.parseIfExpression)
 	p.registerPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
-	p.registerPrefixFunction(token.FUNCTION, p.parseFunction)
+	p.registerPrefixFunction(token.FUNCTION, p.parseFunctionLiteral)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
@@ -338,10 +338,8 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 	return whileStmt
 }
 
-func (p *Parser) parseFunction() ast.Expression {
-	fnExpr := &ast.FunctionExpression{Token: p.CurrentToken}
-
-	// fn () { foo }
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	fnLit := &ast.FunctionLiteralExpression{Token: p.CurrentToken}
 
 	if !p.expectPeek(token.LPAREN) {
 		return nil
@@ -349,15 +347,15 @@ func (p *Parser) parseFunction() ast.Expression {
 
 	p.NextToken() // advance to function params
 
-	fnExpr.Parameters = p.parseFunctionParameters()
+	fnLit.Parameters = p.parseFunctionParameters()
 
 	if !p.expectPeek(token.LBRACE) {
 		return nil
 	}
 
-	fnExpr.Body = p.parseBlockStatement().(*ast.BlockStatement)
+	fnLit.Body = p.parseBlockStatement().(*ast.BlockStatement)
 
-	return fnExpr
+	return fnLit
 }
 
 func (p *Parser) parseFunctionParameters() []ast.Identifier {
