@@ -26,9 +26,9 @@ type Program struct {
 	Statements []Statement
 }
 
-//-----------------------------
+// -----------------------------
 // Let Statement
-//-----------------------------
+// -----------------------------
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier
@@ -53,9 +53,9 @@ func (ls *LetStatement) String() string {
 
 func (ls *LetStatement) Statement() {}
 
-//-----------------------------
+// -----------------------------
 // Return Statement
-//-----------------------------
+// -----------------------------
 type ReturnStatement struct {
 	Token       token.Token
 	ReturnValue Expression
@@ -77,9 +77,9 @@ func (rs *ReturnStatement) String() string {
 
 func (rs *ReturnStatement) Statement() {}
 
-//-----------------------------
+// -----------------------------
 // Expression Statement
-//-----------------------------
+// -----------------------------
 type ExpressionStatement struct {
 	Token      token.Token
 	Expression Expression
@@ -101,9 +101,9 @@ func (es *ExpressionStatement) String() string {
 
 func (es *ExpressionStatement) Statement() {}
 
-//-----------------------------
+// -----------------------------
 // Identifier Expression
-//-----------------------------
+// -----------------------------
 type Identifier struct {
 	Token token.Token
 	Value string
@@ -119,9 +119,9 @@ func (i *Identifier) String() string {
 
 func (i *Identifier) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Integer Literal Expression
-//-----------------------------
+// -----------------------------
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
@@ -137,9 +137,9 @@ func (il *IntegerLiteral) String() string {
 
 func (il *IntegerLiteral) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Float Literal Expression
-//-----------------------------
+// -----------------------------
 type FloatLiteral struct {
 	Token token.Token
 	Value float64
@@ -155,9 +155,9 @@ func (fl *FloatLiteral) String() string {
 
 func (fl *FloatLiteral) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Boolean Literal Expression
-//-----------------------------
+// -----------------------------
 type BooleanLiteral struct {
 	Token token.Token
 	Value bool
@@ -179,9 +179,9 @@ func (bl *BooleanLiteral) String() string {
 
 func (bl *BooleanLiteral) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Infix Expression
-//-----------------------------
+// -----------------------------
 type InfixExpression struct {
 	Token    token.Token
 	Left     Expression
@@ -207,9 +207,9 @@ func (ie *InfixExpression) String() string {
 
 func (ie *InfixExpression) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // If Expression
-//-----------------------------
+// -----------------------------
 type IfExpression struct {
 	Token     token.Token
 	Condition Expression
@@ -238,9 +238,9 @@ func (ife *IfExpression) String() string {
 
 func (ife *IfExpression) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Block Statement
-//-----------------------------
+// -----------------------------
 type BlockStatement struct {
 	Token      token.Token // the `{`
 	Statements []Statement
@@ -257,6 +257,7 @@ func (bs *BlockStatement) String() string {
 
 	for _, stmt := range bs.Statements {
 		out.WriteString(stmt.String())
+		out.WriteString(";")
 	}
 
 	out.WriteString("}")
@@ -266,9 +267,9 @@ func (bs *BlockStatement) String() string {
 
 func (bs *BlockStatement) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // While Statement
-//-----------------------------
+// -----------------------------
 type WhileStatement struct {
 	Token     token.Token
 	Condition Expression
@@ -293,36 +294,44 @@ func (ws *WhileStatement) String() string {
 
 func (ws *WhileStatement) Statement() {}
 
-//-----------------------------
-// Function Expression
-//-----------------------------
+// -----------------------------
+// Function Literal Expression
+// -----------------------------
 type FunctionExpression struct {
 	Token      token.Token
-	Parameters *ExpressionList
+	Parameters []Identifier
 	Body       *BlockStatement
 }
 
-func (fs *FunctionExpression) TokenLiteral() string {
-	return fs.Token.Literal
+func (fe *FunctionExpression) TokenLiteral() string {
+	return fe.Token.Literal
 }
 
-func (fs *FunctionExpression) String() string {
+func (fe *FunctionExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(fs.Token.Literal)
+	out.WriteString(fe.Token.Literal)
 	out.WriteString("(")
-	out.WriteString(fs.Parameters.String())
+
+	params := []string{}
+
+	for _, param := range fe.Parameters {
+		params = append(params, param.String())
+	}
+
+	out.WriteString(strings.Join(params, ", "))
+
 	out.WriteString(")")
-	// out.WriteString(fs.Body.String())
+	out.WriteString(fe.Body.String())
 
 	return out.String()
 }
 
-func (fs *FunctionExpression) Expression() {}
+func (fe *FunctionExpression) Expression() {}
 
-//-----------------------------
+// -----------------------------
 // Expression List
-//-----------------------------
+// -----------------------------
 type ExpressionList struct {
 	Token token.Token // the `(` token
 	List  []Expression
@@ -350,3 +359,35 @@ func (el *ExpressionList) String() string {
 }
 
 func (el *ExpressionList) Expression() {}
+
+// -----------------------------
+// Function Call Expression
+// -----------------------------
+type FunctionCallExpression struct {
+	Token    token.Token
+	Function Expression // the function itself
+	Args     *ExpressionList
+}
+
+func (fc *FunctionCallExpression) TokenLiteral() string {
+	return fc.Token.Literal
+}
+
+func (fc *FunctionCallExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(fc.Function.String())
+	out.WriteString("(")
+
+	args := []string{}
+	for _, expr := range fc.Args.List {
+		args = append(args, expr.String())
+	}
+
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (fc *FunctionCallExpression) Expression() {}

@@ -12,13 +12,15 @@ const (
 	LOWEST
 	SUM
 	PRODUCT
+	CALL
 )
 
 var precedence = map[token.TokenType]int{
-	token.PLUS:  SUM,
-	token.MINUS: SUM,
-	token.STAR:  PRODUCT,
-	token.SLASH: PRODUCT,
+	token.PLUS:   SUM,
+	token.MINUS:  SUM,
+	token.STAR:   PRODUCT,
+	token.SLASH:  PRODUCT,
+	token.LPAREN: CALL,
 }
 
 type (
@@ -56,6 +58,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerInfixFunction(token.MINUS, p.parseInfixExpression)
 	p.registerInfixFunction(token.STAR, p.parseInfixExpression)
 	p.registerInfixFunction(token.SLASH, p.parseInfixExpression)
+	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
 
 	// prime the tokens
 	p.NextToken()
@@ -346,7 +349,7 @@ func (p *Parser) parseFunction() ast.Expression {
 
 	p.NextToken() // advance to function params
 
-	fnExpr.Parameters = p.parseExpressionList()
+	fnExpr.Parameters = p.parseFunctionParameters()
 
 	if !p.expectPeek(token.LBRACE) {
 		return nil
@@ -357,7 +360,42 @@ func (p *Parser) parseFunction() ast.Expression {
 	return fnExpr
 }
 
-func (p *Parser) parseExpressionList() *ast.ExpressionList {
+func (p *Parser) parseFunctionParameters() []ast.Identifier {
+	params := []ast.Identifier{}
+
+	if p.currentTokenIs(token.RPAREN) {
+		return params
+	}
+
+	param := ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+	params = append(params, param)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.NextToken() // consume the `,` token
+		p.NextToken() // advance to next expression in the list of expression
+
+		param = ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+		params = append(params, param)
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return params
+}
+
+func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
+	fnCall := &ast.FunctionCallExpression{Token: p.CurrentToken, Function: left}
+
+	p.NextToken() // advance to args list
+
+	fnCall.Args = p.parseFunctionArguments()
+
+	return fnCall
+}
+
+func (p *Parser) parseFunctionArguments() *ast.ExpressionList {
 	exprList := &ast.ExpressionList{Token: p.CurrentToken}
 	exprList.List = []ast.Expression{}
 
@@ -365,14 +403,15 @@ func (p *Parser) parseExpressionList() *ast.ExpressionList {
 		return exprList
 	}
 
-	expr := p.parseExpression(LOWEST)
-	exprList.List = append(exprList.List, expr)
+	args := p.parseExpression(LOWEST)
+	exprList.List = append(exprList.List, args)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.NextToken() // consume the `,` token
 		p.NextToken() // advance to next expression in the list of expression
-		expr = p.parseExpression(LOWEST)
-		exprList.List = append(exprList.List, expr)
+
+		args := p.parseExpression(LOWEST)
+		exprList.List = append(exprList.List, args)
 	}
 
 	if !p.expectPeek(token.RPAREN) {
