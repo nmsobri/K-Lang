@@ -12,15 +12,26 @@ const (
 	LOWEST
 	SUM
 	PRODUCT
+	COMPARE
+	PREFIX
 	CALL
 )
 
+// this precedence is only needed by infix operator
+// since it is being used by parseExpression to determine
+// wether to continue parsing or not
 var precedence = map[token.TokenType]int{
-	token.PLUS:   SUM,
-	token.MINUS:  SUM,
-	token.STAR:   PRODUCT,
-	token.SLASH:  PRODUCT,
-	token.LPAREN: CALL,
+	token.PLUS:          SUM,
+	token.MINUS:         SUM,
+	token.STAR:          PRODUCT,
+	token.SLASH:         PRODUCT,
+	token.GREATER:       COMPARE,
+	token.GREATER_EQUAL: COMPARE,
+	token.LESSER:        COMPARE,
+	token.LESSER_EQUAL:  COMPARE,
+	token.EQUAL:         COMPARE,
+	token.EQUAL_NOT:     COMPARE,
+	token.LPAREN:        CALL,
 }
 
 type (
@@ -52,12 +63,21 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.IF, p.parseIfExpression)
 	p.registerPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.registerPrefixFunction(token.FUNCTION, p.parseFunctionLiteral)
+	p.registerPrefixFunction(token.BANG, p.parsePrefixExpression)
+	p.registerPrefixFunction(token.MINUS, p.parsePrefixExpression)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFunction(token.MINUS, p.parseInfixExpression)
 	p.registerInfixFunction(token.STAR, p.parseInfixExpression)
 	p.registerInfixFunction(token.SLASH, p.parseInfixExpression)
+	p.registerInfixFunction(token.GREATER, p.parseInfixExpression)
+	p.registerInfixFunction(token.GREATER_EQUAL, p.parseInfixExpression)
+	p.registerInfixFunction(token.LESSER, p.parseInfixExpression)
+	p.registerInfixFunction(token.LESSER_EQUAL, p.parseInfixExpression)
+	p.registerInfixFunction(token.EQUAL, p.parseInfixExpression)
+	p.registerInfixFunction(token.EQUAL_NOT, p.parseInfixExpression)
+
 	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
 
 	// prime the tokens
@@ -256,13 +276,23 @@ func (p *Parser) peekTokenPrecedence() int {
 	return LOWEST
 }
 
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	prefix := &ast.PrefixExpression{Token: p.CurrentToken, Operator: p.CurrentToken.Literal}
+
+	p.NextToken() // advance to the expression
+
+	prefix.Right = p.parseExpression(PREFIX) // need to used other than LOWEST cause we are not the start of expression
+
+	return prefix
+}
+
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	infix := &ast.InfixExpression{Token: p.CurrentToken, Left: left, Operator: p.CurrentToken.Literal}
 
 	prec := precedence[p.CurrentToken.Type]
 	p.NextToken() // advance to the right operand of the operator
 
-	infix.Right = p.parseExpression(prec)
+	infix.Right = p.parseExpression(prec) // need to used other than LOWEST cause we are not the start of expression
 	return infix
 }
 
