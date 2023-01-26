@@ -109,6 +109,12 @@ func (l *Lexer) NextToken() token.Token {
 	case ';':
 		tok = l.makeToken(token.SEMICOLON, string(l.CurrentChar()))
 
+	case '[':
+		tok = l.makeToken(token.LBRACKET, string(l.CurrentChar()))
+
+	case ']':
+		tok = l.makeToken(token.RBRACKET, string(l.CurrentChar()))
+
 	case 0:
 		tok = l.makeToken(token.EOF, "EOF")
 

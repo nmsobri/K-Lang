@@ -65,6 +65,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefixFunction(token.BANG, p.parsePrefixExpression)
 	p.registerPrefixFunction(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefixFunction(token.LBRACKET, p.parseArrayLiteral)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
@@ -77,7 +78,6 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerInfixFunction(token.LESSER_EQUAL, p.parseInfixExpression)
 	p.registerInfixFunction(token.EQUAL, p.parseInfixExpression)
 	p.registerInfixFunction(token.EQUAL_NOT, p.parseInfixExpression)
-
 	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
 
 	// prime the tokens
@@ -418,16 +418,16 @@ func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
 
 	p.NextToken() // advance to args list
 
-	fnCall.Args = p.parseFunctionArguments()
+	fnCall.Args = p.parseExpressionList(token.RPAREN)
 
 	return fnCall
 }
 
-func (p *Parser) parseFunctionArguments() *ast.ExpressionList {
+func (p *Parser) parseExpressionList(end token.TokenType) *ast.ExpressionList {
 	exprList := &ast.ExpressionList{Token: p.CurrentToken}
 	exprList.List = []ast.Expression{}
 
-	if p.currentTokenIs(token.RPAREN) {
+	if p.currentTokenIs(end) {
 		return exprList
 	}
 
@@ -442,9 +442,18 @@ func (p *Parser) parseFunctionArguments() *ast.ExpressionList {
 		exprList.List = append(exprList.List, args)
 	}
 
-	if !p.expectPeek(token.RPAREN) {
+	if !p.expectPeek(end) {
 		return nil
 	}
 
 	return exprList
+}
+
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	arrExpr := &ast.ArrayLiteralExpression{Token: p.CurrentToken}
+	p.NextToken() // advance to array elements
+
+	arrExpr.Elements = p.parseExpressionList(token.RBRACKET)
+
+	return arrExpr
 }

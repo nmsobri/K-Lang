@@ -17,6 +17,8 @@ func TestNextToken(t *testing.T) {
     )
     ,
     !
+    [
+    ]
     !=
     =
     ==
@@ -62,6 +64,8 @@ func TestNextToken(t *testing.T) {
 		{token.RPAREN, ")"},
 		{token.COMMA, ","},
 		{token.BANG, "!"},
+		{token.LBRACKET, "["},
+		{token.RBRACKET, "]"},
 		{token.EQUAL_NOT, "!="},
 		{token.ASSIGN, "="},
 		{token.EQUAL, "=="},

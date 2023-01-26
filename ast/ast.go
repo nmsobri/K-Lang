@@ -415,3 +415,32 @@ func (fce *FunctionCallExpression) String() string {
 }
 
 func (fce *FunctionCallExpression) Expression() {}
+
+// -----------------------------
+// Array Literal Expression
+// -----------------------------
+type ArrayLiteralExpression struct {
+	Token    token.Token
+	Elements *ExpressionList
+}
+
+func (ale *ArrayLiteralExpression) TokenLiteral() string {
+	return ale.Token.Literal
+}
+
+func (ale *ArrayLiteralExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("[")
+
+	elems := []string{}
+	for _, elem := range ale.Elements.List {
+		elems = append(elems, elem.String())
+	}
+
+	out.WriteString(strings.Join(elems, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+func (ale *ArrayLiteralExpression) Expression() {}

@@ -17,6 +17,8 @@ const (
 	LPAREN    = "LPAREN"    // `(`
 	RPAREN    = "RPAREN"    // `)`
 	COMMA     = "COMMA"     // `,`
+	LBRACKET  = "LBRACKET"  // `[`
+	RBRACKET  = "RBRACKET"  // `]`
 
 	// Double character token
 	EQUAL         = "EQUAL"         // `==`
