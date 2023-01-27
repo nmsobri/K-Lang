@@ -487,3 +487,32 @@ func (sle *StringLiteralExpression) String() string {
 }
 
 func (sle *StringLiteralExpression) Expression() {}
+
+// -----------------------------
+// HashMap Literal Expression
+// -----------------------------
+type HashmapLiteralExpression struct {
+	Token token.Token
+	Map   map[Expression]Expression
+}
+
+func (hle *HashmapLiteralExpression) TokenLiteral() string {
+	return hle.Token.Literal
+}
+
+func (hle *HashmapLiteralExpression) String() string {
+	var out bytes.Buffer
+
+	elems := []string{}
+	for k, v := range hle.Map {
+		elems = append(elems, k.String()+":"+v.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(elems, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
+
+func (hle *HashmapLiteralExpression) Expression() {}

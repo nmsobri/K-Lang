@@ -1,4 +1,3 @@
-// TODO : parse array index
 package parser
 
 import (
@@ -69,6 +68,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.BANG, p.parsePrefixExpression)
 	p.registerPrefixFunction(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefixFunction(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefixFunction(token.LBRACE, p.parseHashMap)
 	p.registerPrefixFunction(token.STRING, p.parseStringLiteral)
 
 	// infix function
@@ -477,5 +477,54 @@ func (p *Parser) parseArrayIndex(left ast.Expression) ast.Expression {
 
 func (p *Parser) parseStringLiteral() ast.Expression {
 	return &ast.StringLiteralExpression{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+}
 
+func (p *Parser) parseHashMap() ast.Expression {
+	hashMap := &ast.HashmapLiteralExpression{Token: p.CurrentToken}
+
+	p.NextToken() // advance to expression
+
+	hashMap.Map = p.parseHashmapExpressionList()
+	return hashMap
+}
+
+func (p *Parser) parseHashmapExpressionList() map[ast.Expression]ast.Expression {
+	hashMap := map[ast.Expression]ast.Expression{}
+
+	if p.currentTokenIs(token.RBRACE) {
+		return hashMap
+	}
+
+	key := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.COLON) {
+		return nil
+	}
+
+	p.NextToken() // advance to next expression
+	val := p.parseExpression(LOWEST)
+
+	hashMap[key] = val
+
+	for p.peekTokenIs(token.COMMA) {
+		p.NextToken() // consume the `,`
+		p.NextToken() // advance to next expression
+
+		key = p.parseExpression(LOWEST)
+
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+
+		p.NextToken() //advance to next expression
+
+		val = p.parseExpression(LOWEST)
+		hashMap[key] = val
+	}
+
+	if !p.expectPeek(token.RBRACE) {
+		return nil
+	}
+
+	return hashMap
 }

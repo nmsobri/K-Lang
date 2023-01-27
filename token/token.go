@@ -27,10 +27,10 @@ const (
 	LESSER_EQUAL  = "LESSER_EQUAL"  // `<=`
 
 	// Multiple character token
-	INTEGER    = "INTEGER"    // `[0-9]`
-	FLOATING   = "FLOATING"   // `[0-9]\.[0-9]`
-	IDENTIFIER = "IDENTIFIER" // `[a-z][A-Z][0-9]`
-	STRING     = "STRING"     // `[^"]+`
+	INTEGER    = "INTEGER"    // `[0-9]+`
+	FLOATING   = "FLOATING"   // `[0-9]+\.[0-9]+`
+	IDENTIFIER = "IDENTIFIER" // `[a-zA-Z_][a-zA-Z_0-9]+`
+	STRING     = "STRING"     // `"[^"]+"`
 
 	// Special token
 	EOF     = "EOF"
