@@ -39,6 +39,7 @@ func TestNextToken(t *testing.T) {
     false
     if
     else
+    "foobar"
 
     let five = 5;
 	  let ten = 10;
@@ -86,6 +87,7 @@ func TestNextToken(t *testing.T) {
 		{token.FALSE, "false"},
 		{token.IF, "if"},
 		{token.ELSE, "else"},
+		{token.STRING, "foobar"},
 
 		{token.LET, "let"},
 		{token.IDENTIFIER, "five"},

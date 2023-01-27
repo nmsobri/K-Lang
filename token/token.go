@@ -30,6 +30,7 @@ const (
 	INTEGER    = "INTEGER"    // `[0-9]`
 	FLOATING   = "FLOATING"   // `[0-9]\.[0-9]`
 	IDENTIFIER = "IDENTIFIER" // `[a-z][A-Z][0-9]`
+	STRING     = "STRING"     // `[^"]+`
 
 	// Special token
 	EOF     = "EOF"

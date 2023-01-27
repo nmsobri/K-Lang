@@ -71,6 +71,15 @@ func (l *Lexer) NextToken() token.Token {
 	case ',':
 		tok = l.makeToken(token.COMMA, string(l.CurrentChar()))
 
+	case '"':
+		l.ReadChar()
+		pos := l.currentPosition
+
+		for l.CurrentChar() != '"' {
+			l.ReadChar()
+		}
+		tok = l.makeToken(token.STRING, l.source[pos:l.currentPosition])
+
 	case '!':
 		if l.isPeekChar('=') {
 			l.ReadChar()

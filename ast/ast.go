@@ -469,3 +469,21 @@ func (aie *ArrayIndexExpression) String() string {
 }
 
 func (aie *ArrayIndexExpression) Expression() {}
+
+// -----------------------------
+// String Literal Expression
+// -----------------------------
+type StringLiteralExpression struct {
+	Token token.Token
+	Value string
+}
+
+func (sle *StringLiteralExpression) TokenLiteral() string {
+	return sle.Token.Literal
+}
+
+func (sle *StringLiteralExpression) String() string {
+	return fmt.Sprintf("\"%s\"", sle.Value)
+}
+
+func (sle *StringLiteralExpression) Expression() {}

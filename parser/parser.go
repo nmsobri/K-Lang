@@ -69,6 +69,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.BANG, p.parsePrefixExpression)
 	p.registerPrefixFunction(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefixFunction(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefixFunction(token.STRING, p.parseStringLiteral)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
@@ -472,4 +473,9 @@ func (p *Parser) parseArrayIndex(left ast.Expression) ast.Expression {
 	}
 
 	return arrIndex
+}
+
+func (p *Parser) parseStringLiteral() ast.Expression {
+	return &ast.StringLiteralExpression{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+
 }
