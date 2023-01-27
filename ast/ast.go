@@ -444,3 +444,28 @@ func (ale *ArrayLiteralExpression) String() string {
 }
 
 func (ale *ArrayLiteralExpression) Expression() {}
+
+// -----------------------------
+// Array Index Expression
+// -----------------------------
+type ArrayIndexExpression struct {
+	Token token.Token
+	Array Expression
+	Index Expression
+}
+
+func (aie *ArrayIndexExpression) TokenLiteral() string {
+	return aie.Token.Literal
+}
+
+func (aie *ArrayIndexExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(aie.Array.String())
+	out.WriteString("[")
+	out.WriteString(aie.Index.String())
+	out.WriteString("]")
+
+	return out.String()
+}
+
+func (aie *ArrayIndexExpression) Expression() {}

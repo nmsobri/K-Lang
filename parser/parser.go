@@ -1,3 +1,4 @@
+// TODO : parse array index
 package parser
 
 import (
@@ -15,6 +16,7 @@ const (
 	COMPARE
 	PREFIX
 	CALL
+	INDEX
 )
 
 // this precedence is only needed by infix operator
@@ -32,6 +34,7 @@ var precedence = map[token.TokenType]int{
 	token.EQUAL:         COMPARE,
 	token.EQUAL_NOT:     COMPARE,
 	token.LPAREN:        CALL,
+	token.LBRACKET:      INDEX,
 }
 
 type (
@@ -79,6 +82,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerInfixFunction(token.EQUAL, p.parseInfixExpression)
 	p.registerInfixFunction(token.EQUAL_NOT, p.parseInfixExpression)
 	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
+	p.registerInfixFunction(token.LBRACKET, p.parseArrayIndex)
 
 	// prime the tokens
 	p.NextToken()
@@ -456,4 +460,16 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	arrExpr.Elements = p.parseExpressionList(token.RBRACKET)
 
 	return arrExpr
+}
+
+func (p *Parser) parseArrayIndex(left ast.Expression) ast.Expression {
+	arrIndex := &ast.ArrayIndexExpression{Token: p.CurrentToken, Array: left}
+	p.NextToken() // advance to index expression
+	arrIndex.Index = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return arrIndex
 }
