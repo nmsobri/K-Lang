@@ -70,6 +70,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefixFunction(token.LBRACE, p.parseHashMap)
 	p.registerPrefixFunction(token.STRING, p.parseStringLiteral)
+	p.registerPrefixFunction(token.LPAREN, p.parseGrouping)
 
 	// infix function
 	p.registerInfixFunction(token.PLUS, p.parseInfixExpression)
@@ -207,6 +208,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	// 1 + 2; #pass
 	// 1 +;
+	// (1 + 2) * 3
 
 	left := prefix()
 
@@ -527,4 +529,19 @@ func (p *Parser) parseHashmapExpressionList() map[ast.Expression]ast.Expression 
 	}
 
 	return hashMap
+}
+
+func (p *Parser) parseGrouping() ast.Expression {
+
+	// !(1 + 2)
+	// (1 + 2) * 3
+	// (1 + 2 * 3)
+	p.NextToken() // advance to the expression
+	left := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return left
 }
