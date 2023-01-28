@@ -462,27 +462,27 @@ func (ale *ArrayLiteralExpression) Expression() {}
 // -----------------------------
 // Array Index Expression
 // -----------------------------
-type ArrayIndexExpression struct {
+type IndexExpression struct {
 	Token token.Token
-	Array Expression
+	Ident Expression
 	Index Expression
 }
 
-func (aie *ArrayIndexExpression) TokenLiteral() string {
-	return aie.Token.Literal
+func (ie *IndexExpression) TokenLiteral() string {
+	return ie.Token.Literal
 }
 
-func (aie *ArrayIndexExpression) String() string {
+func (ie *IndexExpression) String() string {
 	var out bytes.Buffer
-	out.WriteString(aie.Array.String())
+	out.WriteString(ie.Ident.String())
 	out.WriteString("[")
-	out.WriteString(aie.Index.String())
+	out.WriteString(ie.Index.String())
 	out.WriteString("]")
 
 	return out.String()
 }
 
-func (aie *ArrayIndexExpression) Expression() {}
+func (ie *IndexExpression) Expression() {}
 
 // -----------------------------
 // String Literal Expression

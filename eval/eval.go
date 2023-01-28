@@ -1,3 +1,4 @@
+//TODO : parse hashmap is not working
 package eval
 
 import (
@@ -44,8 +45,11 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 	case *ast.ArrayLiteralExpression:
 		return evalArrayLiteralExpression(node, env)
 
-	case *ast.ArrayIndexExpression:
-		return evalArrayIndexExpression(node, env)
+	case *ast.HashmapLiteralExpression:
+		return evalHashMapLiteralExpression(node, env)
+
+	case *ast.IndexExpression:
+		return evalIndexExpression(node, env)
 
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(node, env)
@@ -111,17 +115,36 @@ func evalArrayLiteralExpression(node *ast.ArrayLiteralExpression, env *environme
 	return arr
 }
 
-func evalArrayIndexExpression(node *ast.ArrayIndexExpression, env *environment.Environment) object.Object {
-	array := Eval(node.Array, env).(*object.Array).Value
-	index := Eval(node.Index, env).(*object.Integer).Value
+func evalIndexExpression(node *ast.IndexExpression, env *environment.Environment) object.Object {
+	ident := Eval(node.Ident, env)
+	index := Eval(node.Index, env)
 
-	arrLen := len(array) - 1
+	switch ident.Type() {
+	case object.OBJECT_ARRAY:
+		array := ident.(*object.Array).Value
+		idx := index.(*object.Integer).Value
 
-	if index < 0 || index > int64(arrLen) {
+		arrLen := len(array) - 1
+
+		if idx < 0 || idx > int64(arrLen) {
+			return NILL
+		}
+
+		return array[idx]
+
+	case object.OBJECT_HASHMAP:
+		hash := ident.(*object.HashMap).Value
+		idx := index
+
+		if val, ok := hash[idx]; ok {
+			return val
+		}
+
+		return NILL
+
+	default:
 		return NILL
 	}
-
-	return array[index]
 }
 
 func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environment) object.Object {
@@ -139,4 +162,17 @@ func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environme
 		return NILL
 
 	}
+}
+
+func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *environment.Environment) object.Object {
+	hash := make(map[object.Object]object.Object)
+
+	for k, v := range node.Map {
+		key := Eval(k, env)
+		val := Eval(v, env)
+		hash[key] = val
+	}
+
+	hashMap := &object.HashMap{Value: hash}
+	return hashMap
 }

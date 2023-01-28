@@ -84,7 +84,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerInfixFunction(token.EQUAL, p.parseInfixExpression)
 	p.registerInfixFunction(token.EQUAL_NOT, p.parseInfixExpression)
 	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
-	p.registerInfixFunction(token.LBRACKET, p.parseArrayIndex)
+	p.registerInfixFunction(token.LBRACKET, p.parseIndexExpression)
 
 	// prime the tokens
 	p.NextToken()
@@ -465,8 +465,8 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	return arrExpr
 }
 
-func (p *Parser) parseArrayIndex(left ast.Expression) ast.Expression {
-	arrIndex := &ast.ArrayIndexExpression{Token: p.CurrentToken, Array: left}
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	arrIndex := &ast.IndexExpression{Token: p.CurrentToken, Ident: left}
 	p.NextToken() // advance to index expression
 	arrIndex.Index = p.parseExpression(LOWEST)
 
