@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Klang/environment"
 	"Klang/eval"
 	"Klang/lexer"
 	"Klang/parser"
@@ -20,13 +21,13 @@ func main() {
 			log.Fatal(err)
 		}
 
+		env := environment.New()
 		l := lexer.New(content)
 		p := parser.New(l)
 		program := p.ParseProgram()
-		evaluated := eval.Eval(program)
 
-		fmt.Println(evaluated)
-
+		evaluated := eval.Eval(program, env)
+		fmt.Println(evaluated.Inspect())
 	} else {
 		repl.Start()
 	}

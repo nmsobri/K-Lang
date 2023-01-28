@@ -1,6 +1,8 @@
 package repl
 
 import (
+	"Klang/environment"
+	"Klang/eval"
 	"Klang/lexer"
 	"Klang/parser"
 	"bufio"
@@ -13,6 +15,7 @@ const PROMPT = ">> "
 func Start() {
 	fmt.Println("Welcome To K Programming Language")
 	scanner := bufio.NewScanner(os.Stdin)
+	env := environment.New()
 
 	for {
 		fmt.Print(PROMPT)
@@ -27,8 +30,7 @@ func Start() {
 		p := parser.New(l)
 		program := p.ParseProgram()
 
-		for _, stmt := range program.Statements {
-			fmt.Println(stmt.String())
-		}
+		evaluated := eval.Eval(program, env)
+		fmt.Println(evaluated.Inspect())
 	}
 }

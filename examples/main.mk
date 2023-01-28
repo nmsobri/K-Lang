@@ -17,7 +17,7 @@ if true {
 	return 2;
 }
 
-while true {
+while 10 > 1 {
 	10;
 }
 
