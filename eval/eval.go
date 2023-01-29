@@ -1,4 +1,3 @@
-//TODO : parse hashmap is not working
 package eval
 
 import (
@@ -134,9 +133,9 @@ func evalIndexExpression(node *ast.IndexExpression, env *environment.Environment
 
 	case object.OBJECT_HASHMAP:
 		hash := ident.(*object.HashMap).Value
-		idx := index
+		idx := index.(object.Hashable)
 
-		if val, ok := hash[idx]; ok {
+		if val, ok := hash[idx.Hashkey()]; ok {
 			return val
 		}
 
@@ -165,14 +164,21 @@ func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environme
 }
 
 func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *environment.Environment) object.Object {
-	hash := make(map[object.Object]object.Object)
+	hashMap := make(map[object.Hash]object.Object)
 
 	for k, v := range node.Map {
 		key := Eval(k, env)
 		val := Eval(v, env)
-		hash[key] = val
+
+		hash, ok := key.(object.Hashable)
+
+		if !ok {
+			fmt.Println("invalid key type")
+			return NILL
+		}
+
+		hashMap[hash.Hashkey()] = val
 	}
 
-	hashMap := &object.HashMap{Value: hash}
-	return hashMap
+	return &object.HashMap{Value: hashMap}
 }

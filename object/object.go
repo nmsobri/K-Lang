@@ -23,6 +23,15 @@ type Object interface {
 	Type() ObjectType
 }
 
+type Hash struct {
+	Type  ObjectType
+	Value string
+}
+
+type Hashable interface {
+	Hashkey() Hash
+}
+
 // ------------------------------
 // String Object
 // ------------------------------
@@ -36,6 +45,10 @@ func (s *String) Inspect() string {
 
 func (s *String) Type() ObjectType {
 	return OBJECT_STRING
+}
+
+func (s *String) Hashkey() Hash {
+	return Hash{Type: OBJECT_STRING, Value: s.Value}
 }
 
 // ------------------------------
@@ -65,6 +78,10 @@ func (i *Integer) Inspect() string {
 
 func (i *Integer) Type() ObjectType {
 	return OBJECT_INTEGER
+}
+
+func (i *Integer) Hashkey() Hash {
+	return Hash{Type: OBJECT_INTEGER, Value: fmt.Sprintf("%d", i.Value)}
 }
 
 // ------------------------------
@@ -127,7 +144,7 @@ func (a *Array) Type() ObjectType {
 // HashMap Object
 // ------------------------------
 type HashMap struct {
-	Value map[Object]Object
+	Value map[Hash]Object
 }
 
 func (h *HashMap) Inspect() string {
@@ -136,7 +153,7 @@ func (h *HashMap) Inspect() string {
 	arrStr := []string{}
 
 	for key, val := range h.Value {
-		arrStr = append(arrStr, key.Inspect()+":"+val.Inspect())
+		arrStr = append(arrStr, key.Value+":"+val.Inspect())
 	}
 
 	out.WriteString("{")
