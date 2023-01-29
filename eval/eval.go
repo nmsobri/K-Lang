@@ -4,12 +4,13 @@ import (
 	"Klang/ast"
 	"Klang/environment"
 	"Klang/object"
-	"fmt"
 	"log"
 )
 
 var (
-	NILL = &object.Nill{}
+	NILL  = &object.Nill{}
+	TRUE  = &object.Boolean{Value: true}
+	FALSE = &object.Boolean{Value: false}
 )
 
 func Eval(node ast.Node, env *environment.Environment) object.Object {
@@ -33,7 +34,10 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 		return &object.String{Value: node.Value}
 
 	case *ast.BooleanLiteral:
-		return &object.Boolean{Value: node.Value}
+		if node.Value {
+			return TRUE
+		}
+		return FALSE
 
 	case *ast.LetStatement:
 		return evalLetStatement(node, env)
@@ -53,8 +57,14 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(node, env)
 
+	case *ast.IfExpression:
+		return evalIfExpression(node, env)
+
+	case *ast.BlockStatement:
+		return evalBlockStatement(node, env)
+
 	default:
-		fmt.Println("HITTIN DEFAULT CASE")
+		log.Fatalf("Unhandled case for: %T", node)
 		return NILL
 	}
 }
@@ -76,15 +86,37 @@ func evalInfixExpression(node *ast.InfixExpression, env *environment.Environment
 	switch node.Operator {
 	case "+":
 		return &object.Integer{Value: left + right}
+
 	case "-":
 		return &object.Integer{Value: left - right}
+
 	case "*":
 		return &object.Integer{Value: left * right}
+
 	case "/":
 		return &object.Integer{Value: left / right}
 
+	case ">":
+		return &object.Boolean{Value: left > right}
+
+	case ">=":
+		return &object.Boolean{Value: left >= right}
+
+	case "<":
+		return &object.Boolean{Value: left < right}
+
+	case "<=":
+		return &object.Boolean{Value: left <= right}
+
+	case "==":
+		return &object.Boolean{Value: left == right}
+
+	case "!=":
+		return &object.Boolean{Value: left != right}
+
 	default:
-		return &object.Integer{Value: 0}
+		log.Fatalf("Unknown infix operator %s\n", node.Operator)
+		return NILL
 	}
 }
 
@@ -149,8 +181,9 @@ func evalIndexExpression(node *ast.IndexExpression, env *environment.Environment
 func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environment) object.Object {
 	switch node.Operator {
 	case "!":
-		log.Fatal("not implemented yet")
-		return NILL
+		val := Eval(node.Right, env)
+		boolean := isTruthy(val)
+		return &object.Boolean{Value: !boolean}
 
 	case "-":
 		val := Eval(node.Right, env).(*object.Integer).Value
@@ -173,7 +206,7 @@ func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *envir
 		hash, ok := key.(object.Hashable)
 
 		if !ok {
-			fmt.Println("invalid key type")
+			log.Fatalf("invalid key type: %T", key)
 			return NILL
 		}
 
@@ -181,4 +214,31 @@ func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *envir
 	}
 
 	return &object.HashMap{Value: hashMap}
+}
+
+func evalIfExpression(node *ast.IfExpression, env *environment.Environment) object.Object {
+	condition := Eval(node.Condition, env)
+
+	if isTruthy(condition) {
+		return Eval(node.IfArm, env)
+	}
+
+	return Eval(node.ElseArm, env)
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NILL:
+		return false
+	case FALSE:
+		return false
+	case TRUE:
+		return true
+	default:
+		return true
+	}
+}
+
+func evalBlockStatement(node *ast.BlockStatement, env *environment.Environment) object.Object {
+	return evalProgram(node.Statements, env)
 }
