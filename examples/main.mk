@@ -24,3 +24,5 @@ while 10 > 1 {
 let adder = fn(x) {
 	return x + 2;
 }
+
+adder(3)

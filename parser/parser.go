@@ -10,6 +10,7 @@ import (
 const (
 	_ = iota
 	LOWEST
+	ASSIGN
 	SUM
 	PRODUCT
 	COMPARE
@@ -34,6 +35,7 @@ var precedence = map[token.TokenType]int{
 	token.EQUAL_NOT:     COMPARE,
 	token.LPAREN:        CALL,
 	token.LBRACKET:      INDEX,
+	token.ASSIGN:        ASSIGN,
 }
 
 type (
@@ -85,6 +87,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.registerInfixFunction(token.EQUAL_NOT, p.parseInfixExpression)
 	p.registerInfixFunction(token.LPAREN, p.parseFunctionCall)
 	p.registerInfixFunction(token.LBRACKET, p.parseIndexExpression)
+	p.registerInfixFunction(token.ASSIGN, p.parseAssignmentExpression)
 
 	// prime the tokens
 	p.NextToken()
@@ -544,4 +547,12 @@ func (p *Parser) parseGrouping() ast.Expression {
 	}
 
 	return left
+}
+
+func (p *Parser) parseAssignmentExpression(left ast.Expression) ast.Expression {
+	assExpr := &ast.AssignmentExpression{Token: p.CurrentToken, Ident: left.(*ast.Identifier)}
+	p.NextToken() // advance to the expression
+
+	assExpr.Value = p.parseExpression(LOWEST)
+	return assExpr
 }

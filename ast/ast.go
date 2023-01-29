@@ -530,3 +530,26 @@ func (hle *HashmapLiteralExpression) String() string {
 }
 
 func (hle *HashmapLiteralExpression) Expression() {}
+
+type AssignmentExpression struct {
+	Token token.Token
+	Ident *Identifier
+	Value Expression
+}
+
+func (ae *AssignmentExpression) TokenLiteral() string {
+	return ae.Token.Literal
+}
+
+func (ae *AssignmentExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ae.Ident.String())
+	out.WriteString(" = ")
+	out.WriteString(ae.Value.String())
+
+	return out.String()
+}
+
+func (ae *AssignmentExpression) Expression() {}

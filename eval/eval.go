@@ -1,3 +1,4 @@
+// TODO: wip parse while statement
 package eval
 
 import (
@@ -62,6 +63,12 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, env)
+
+	case *ast.WhileStatement:
+		return evalWhileStatement(node, env)
+
+	case *ast.AssignmentExpression:
+		return evalAssignmentExpression(node, env)
 
 	default:
 		log.Fatalf("Unhandled case for: %T", node)
@@ -241,4 +248,20 @@ func isTruthy(obj object.Object) bool {
 
 func evalBlockStatement(node *ast.BlockStatement, env *environment.Environment) object.Object {
 	return evalProgram(node.Statements, env)
+}
+
+func evalWhileStatement(node *ast.WhileStatement, env *environment.Environment) object.Object {
+	var res object.Object
+
+	for Eval(node.Condition, env).(*object.Boolean).Value {
+		res = Eval(node.Body, env)
+	}
+
+	return res
+}
+
+func evalAssignmentExpression(node *ast.AssignmentExpression, env *environment.Environment) object.Object {
+	val := Eval(node.Value, env)
+	env.Set(node.Ident.Value, val)
+	return NILL
 }
