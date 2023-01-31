@@ -279,37 +279,6 @@ func evalAssignmentExpression(node *ast.AssignmentExpression, env *environment.E
 	return NILL
 }
 
-func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *environment.Environment) object.Object {
-	return &object.Function{Parameters: node.Parameters, Body: node.Body}
-}
-
-func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *environment.Environment) object.Object {
-	// let foo = fn(x) { return x + 2; }
-	// foo(3)
-
-	fn := Eval(node.Function, env).(*object.Function)
-	args := Eval(node.Args, env).(*object.Array)
-
-	fnEnv := environment.New()
-	_ = fnEnv
-
-	// bind args to params
-	for k, v := range args.Value {
-		fnEnv.Set(fn.Parameters[k].Value, v)
-	}
-
-	// Eval(fn.Body, env)
-
-	Eval(fn.Body, fnEnv)
-
-	// fmt.Println(fn.Inspect())
-	// fmt.Println(fn.Type())
-	//
-	// fmt.Println(args.Inspect())
-
-	return NILL
-}
-
 func evalExpressionList(node *ast.ExpressionList, env *environment.Environment) object.Object {
 	expressions := []object.Object{}
 
@@ -319,4 +288,25 @@ func evalExpressionList(node *ast.ExpressionList, env *environment.Environment) 
 	}
 
 	return &object.Array{Value: expressions}
+}
+
+func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *environment.Environment) object.Object {
+	return &object.Function{Parameters: node.Parameters, Body: node.Body}
+}
+
+func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *environment.Environment) object.Object {
+	fn := Eval(node.Function, env).(*object.Function)
+	args := Eval(node.Args, env).(*object.Array)
+
+  // start function own scope and inherit from outre scope
+	fnEnv := environment.NewWithParent(env)
+
+	// bind args to params
+	for k, v := range args.Value {
+		fnEnv.Set(fn.Parameters[k].Value, v)
+	}
+
+	Eval(fn.Body, fnEnv)
+
+	return NILL
 }
