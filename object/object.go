@@ -1,6 +1,7 @@
 package object
 
 import (
+	"Klang/ast"
 	"bytes"
 	"fmt"
 	"strings"
@@ -9,13 +10,14 @@ import (
 type ObjectType string
 
 const (
-	OBJECT_NILL    = "OBJECT_NILL"
-	OBJECT_STRING  = "OBJECT_STRING"
-	OBJECT_INTEGER = "OBJECT_INTEGER"
-	OBJECT_FLOAT   = "OBJECT_FLOAT"
-	OBJECT_BOOLEAN = "OBJECT_BOOLEAN"
-	OBJECT_ARRAY   = "OBJECT_ARRAY"
-	OBJECT_HASHMAP = "OBJECT_HASHMAP"
+	OBJECT_NILL     = "OBJECT_NILL"
+	OBJECT_STRING   = "OBJECT_STRING"
+	OBJECT_INTEGER  = "OBJECT_INTEGER"
+	OBJECT_FLOAT    = "OBJECT_FLOAT"
+	OBJECT_BOOLEAN  = "OBJECT_BOOLEAN"
+	OBJECT_ARRAY    = "OBJECT_ARRAY"
+	OBJECT_HASHMAP  = "OBJECT_HASHMAP"
+	OBJECT_FUNCTION = "OBJECT_FUNCTION"
 )
 
 type Object interface {
@@ -164,4 +166,32 @@ func (h *HashMap) Inspect() string {
 
 func (h *HashMap) Type() ObjectType {
 	return OBJECT_HASHMAP
+}
+
+// ------------------------------
+// Function Object
+// ------------------------------
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+}
+
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+	params := []string{}
+
+	for _, val := range f.Parameters {
+		params = append(params, val.String())
+	}
+
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(")")
+	out.WriteString(f.Body.String())
+
+	return out.String()
+}
+
+func (f *Function) Type() ObjectType {
+	return OBJECT_FUNCTION
 }

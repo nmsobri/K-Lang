@@ -398,21 +398,21 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	return fnLit
 }
 
-func (p *Parser) parseFunctionParameters() []ast.Identifier {
-	params := []ast.Identifier{}
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	params := []*ast.Identifier{}
 
 	if p.currentTokenIs(token.RPAREN) {
 		return params
 	}
 
-	param := ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+	param := &ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
 	params = append(params, param)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.NextToken() // consume the `,` token
 		p.NextToken() // advance to next expression in the list of expression
 
-		param = ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+		param = &ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
 		params = append(params, param)
 	}
 

@@ -1,10 +1,11 @@
-// TODO: wip parse while statement
+// TODO: continue evaluating function, evaluation is partially working, still cannot access variable out of function scope
 package eval
 
 import (
 	"Klang/ast"
 	"Klang/environment"
 	"Klang/object"
+	"fmt"
 	"log"
 )
 
@@ -70,6 +71,15 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 	case *ast.AssignmentExpression:
 		return evalAssignmentExpression(node, env)
 
+	case *ast.FunctionLiteralExpression:
+		return evalFunctionLiteralExpression(node, env)
+
+	case *ast.FunctionCallExpression:
+		return evalFunctionCallExpression(node, env)
+
+	case *ast.ExpressionList:
+		return evalExpressionList(node, env)
+
 	default:
 		log.Fatalf("Unhandled case for: %T", node)
 		return NILL
@@ -81,6 +91,7 @@ func evalProgram(statements []ast.Statement, env *environment.Environment) objec
 
 	for _, stmt := range statements {
 		result = Eval(stmt, env)
+		fmt.Println(result.Inspect())
 	}
 
 	return result
@@ -138,6 +149,7 @@ func evalIdentifier(node *ast.Identifier, env *environment.Environment) object.O
 		return val
 	}
 
+	log.Printf("undefined identifier: %s\n", node.Value)
 	return NILL
 }
 
@@ -255,6 +267,7 @@ func evalWhileStatement(node *ast.WhileStatement, env *environment.Environment) 
 
 	for Eval(node.Condition, env).(*object.Boolean).Value {
 		res = Eval(node.Body, env)
+		fmt.Println(res.Inspect())
 	}
 
 	return res
@@ -264,4 +277,46 @@ func evalAssignmentExpression(node *ast.AssignmentExpression, env *environment.E
 	val := Eval(node.Value, env)
 	env.Set(node.Ident.Value, val)
 	return NILL
+}
+
+func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *environment.Environment) object.Object {
+	return &object.Function{Parameters: node.Parameters, Body: node.Body}
+}
+
+func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *environment.Environment) object.Object {
+	// let foo = fn(x) { return x + 2; }
+	// foo(3)
+
+	fn := Eval(node.Function, env).(*object.Function)
+	args := Eval(node.Args, env).(*object.Array)
+
+	fnEnv := environment.New()
+	_ = fnEnv
+
+	// bind args to params
+	for k, v := range args.Value {
+		fnEnv.Set(fn.Parameters[k].Value, v)
+	}
+
+	// Eval(fn.Body, env)
+
+	Eval(fn.Body, fnEnv)
+
+	// fmt.Println(fn.Inspect())
+	// fmt.Println(fn.Type())
+	//
+	// fmt.Println(args.Inspect())
+
+	return NILL
+}
+
+func evalExpressionList(node *ast.ExpressionList, env *environment.Environment) object.Object {
+	expressions := []object.Object{}
+
+	for _, expr := range node.List {
+		obj := Eval(expr, env)
+		expressions = append(expressions, obj)
+	}
+
+	return &object.Array{Value: expressions}
 }

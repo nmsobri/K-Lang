@@ -336,8 +336,8 @@ func (ws *WhileStatement) Statement() {}
 // Function Literal Expression
 // -----------------------------
 type FunctionLiteralExpression struct {
-	Token      token.Token
-	Parameters []Identifier
+	Token      token.Token // the `fn` token
+	Parameters []*Identifier
 	Body       *BlockStatement
 }
 
