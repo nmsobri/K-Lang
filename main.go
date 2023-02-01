@@ -1,9 +1,9 @@
 package main
 
 import (
-	"Klang/environment"
 	"Klang/eval"
 	"Klang/lexer"
+	"Klang/object"
 	"Klang/parser"
 	"Klang/repl"
 	"fmt"
@@ -21,7 +21,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		env := environment.New()
+		env := object.NewEnvironment()
 		l := lexer.New(content)
 		p := parser.New(l)
 		program := p.ParseProgram()

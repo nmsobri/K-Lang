@@ -172,8 +172,9 @@ func (h *HashMap) Type() ObjectType {
 // Function Object
 // ------------------------------
 type Function struct {
-	Parameters []*ast.Identifier
-	Body       *ast.BlockStatement
+	Parameters  []*ast.Identifier
+	Body        *ast.BlockStatement
+	Environment *Environment
 }
 
 func (f *Function) Inspect() string {

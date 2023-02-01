@@ -1,11 +1,9 @@
-// TODO: continue evaluating function, evaluation is partially working, still cannot access variable out of function scope
+// TODO: eval return statement
 package eval
 
 import (
 	"Klang/ast"
-	"Klang/environment"
 	"Klang/object"
-	"fmt"
 	"log"
 )
 
@@ -15,7 +13,7 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
-func Eval(node ast.Node, env *environment.Environment) object.Object {
+func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		return evalProgram(node.Statements, env)
@@ -86,18 +84,17 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 	}
 }
 
-func evalProgram(statements []ast.Statement, env *environment.Environment) object.Object {
+func evalProgram(statements []ast.Statement, env *object.Environment) object.Object {
 	var result object.Object
 
 	for _, stmt := range statements {
 		result = Eval(stmt, env)
-		fmt.Println(result.Inspect())
 	}
 
 	return result
 }
 
-func evalInfixExpression(node *ast.InfixExpression, env *environment.Environment) object.Object {
+func evalInfixExpression(node *ast.InfixExpression, env *object.Environment) object.Object {
 	left := Eval(node.Left, env).(*object.Integer).Value
 	right := Eval(node.Right, env).(*object.Integer).Value
 
@@ -138,13 +135,13 @@ func evalInfixExpression(node *ast.InfixExpression, env *environment.Environment
 	}
 }
 
-func evalLetStatement(node *ast.LetStatement, env *environment.Environment) object.Object {
+func evalLetStatement(node *ast.LetStatement, env *object.Environment) object.Object {
 	val := Eval(node.Value, env)
 	env.Set(node.Name.Value, val)
 	return NILL
 }
 
-func evalIdentifier(node *ast.Identifier, env *environment.Environment) object.Object {
+func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
 	if val := env.Get(node.Value); val != nil {
 		return val
 	}
@@ -153,7 +150,7 @@ func evalIdentifier(node *ast.Identifier, env *environment.Environment) object.O
 	return NILL
 }
 
-func evalArrayLiteralExpression(node *ast.ArrayLiteralExpression, env *environment.Environment) object.Object {
+func evalArrayLiteralExpression(node *ast.ArrayLiteralExpression, env *object.Environment) object.Object {
 	objects := []object.Object{}
 
 	for _, elem := range node.Elements.List {
@@ -165,7 +162,7 @@ func evalArrayLiteralExpression(node *ast.ArrayLiteralExpression, env *environme
 	return arr
 }
 
-func evalIndexExpression(node *ast.IndexExpression, env *environment.Environment) object.Object {
+func evalIndexExpression(node *ast.IndexExpression, env *object.Environment) object.Object {
 	ident := Eval(node.Ident, env)
 	index := Eval(node.Index, env)
 
@@ -197,7 +194,7 @@ func evalIndexExpression(node *ast.IndexExpression, env *environment.Environment
 	}
 }
 
-func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environment) object.Object {
+func evalPrefixExpression(node *ast.PrefixExpression, env *object.Environment) object.Object {
 	switch node.Operator {
 	case "!":
 		val := Eval(node.Right, env)
@@ -215,7 +212,7 @@ func evalPrefixExpression(node *ast.PrefixExpression, env *environment.Environme
 	}
 }
 
-func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *environment.Environment) object.Object {
+func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *object.Environment) object.Object {
 	hashMap := make(map[object.Hash]object.Object)
 
 	for k, v := range node.Map {
@@ -235,7 +232,7 @@ func evalHashMapLiteralExpression(node *ast.HashmapLiteralExpression, env *envir
 	return &object.HashMap{Value: hashMap}
 }
 
-func evalIfExpression(node *ast.IfExpression, env *environment.Environment) object.Object {
+func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Object {
 	condition := Eval(node.Condition, env)
 
 	if isTruthy(condition) {
@@ -258,28 +255,27 @@ func isTruthy(obj object.Object) bool {
 	}
 }
 
-func evalBlockStatement(node *ast.BlockStatement, env *environment.Environment) object.Object {
+func evalBlockStatement(node *ast.BlockStatement, env *object.Environment) object.Object {
 	return evalProgram(node.Statements, env)
 }
 
-func evalWhileStatement(node *ast.WhileStatement, env *environment.Environment) object.Object {
+func evalWhileStatement(node *ast.WhileStatement, env *object.Environment) object.Object {
 	var res object.Object
 
 	for Eval(node.Condition, env).(*object.Boolean).Value {
 		res = Eval(node.Body, env)
-		fmt.Println(res.Inspect())
 	}
 
 	return res
 }
 
-func evalAssignmentExpression(node *ast.AssignmentExpression, env *environment.Environment) object.Object {
+func evalAssignmentExpression(node *ast.AssignmentExpression, env *object.Environment) object.Object {
 	val := Eval(node.Value, env)
 	env.Set(node.Ident.Value, val)
 	return NILL
 }
 
-func evalExpressionList(node *ast.ExpressionList, env *environment.Environment) object.Object {
+func evalExpressionList(node *ast.ExpressionList, env *object.Environment) object.Object {
 	expressions := []object.Object{}
 
 	for _, expr := range node.List {
@@ -290,23 +286,21 @@ func evalExpressionList(node *ast.ExpressionList, env *environment.Environment) 
 	return &object.Array{Value: expressions}
 }
 
-func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *environment.Environment) object.Object {
-	return &object.Function{Parameters: node.Parameters, Body: node.Body}
+func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *object.Environment) object.Object {
+	return &object.Function{Parameters: node.Parameters, Body: node.Body, Environment: env}
 }
 
-func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *environment.Environment) object.Object {
+func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *object.Environment) object.Object {
 	fn := Eval(node.Function, env).(*object.Function)
 	args := Eval(node.Args, env).(*object.Array)
 
-  // start function own scope and inherit from outre scope
-	fnEnv := environment.NewWithParent(env)
+	// start function own scope and inherit from outter scope
+	fnEnv := object.NewEnvironmentWithParent(fn.Environment)
 
 	// bind args to params
 	for k, v := range args.Value {
 		fnEnv.Set(fn.Parameters[k].Value, v)
 	}
 
-	Eval(fn.Body, fnEnv)
-
-	return NILL
+	return Eval(fn.Body, fnEnv)
 }
