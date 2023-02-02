@@ -1,4 +1,3 @@
-// TODO: eval return statement
 package eval
 
 import (
@@ -78,6 +77,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.ExpressionList:
 		return evalExpressionList(node, env)
 
+	case *ast.ReturnStatement:
+		return evalReturnStatement(node, env)
+
 	default:
 		log.Fatalf("Unhandled case for: %T", node)
 		return NILL
@@ -89,6 +91,10 @@ func evalProgram(statements []ast.Statement, env *object.Environment) object.Obj
 
 	for _, stmt := range statements {
 		result = Eval(stmt, env)
+
+		if result.Type() == object.OBJECT_RETURN {
+			return result
+		}
 	}
 
 	return result
@@ -303,4 +309,9 @@ func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *object.En
 	}
 
 	return Eval(fn.Body, fnEnv)
+}
+
+func evalReturnStatement(node *ast.ReturnStatement, env *object.Environment) object.Object {
+	value := Eval(node.ReturnValue, env)
+	return &object.Return{Value: value}
 }

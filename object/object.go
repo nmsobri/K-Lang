@@ -18,6 +18,7 @@ const (
 	OBJECT_ARRAY    = "OBJECT_ARRAY"
 	OBJECT_HASHMAP  = "OBJECT_HASHMAP"
 	OBJECT_FUNCTION = "OBJECT_FUNCTION"
+	OBJECT_RETURN   = "OBJECT_RETURN"
 )
 
 type Object interface {
@@ -195,4 +196,19 @@ func (f *Function) Inspect() string {
 
 func (f *Function) Type() ObjectType {
 	return OBJECT_FUNCTION
+}
+
+// ------------------------------
+// Return Object
+// ------------------------------
+type Return struct {
+	Value Object
+}
+
+func (r *Return) Inspect() string {
+	return r.Value.Inspect()
+}
+
+func (r *Return) Type() ObjectType {
+	return OBJECT_RETURN
 }
