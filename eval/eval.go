@@ -148,6 +148,10 @@ func evalLetStatement(node *ast.LetStatement, env *object.Environment) object.Ob
 }
 
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
+	if builtinFun, ok := builtins[node.Value]; ok {
+		return builtinFun
+	}
+
 	if val := env.Get(node.Value); val != nil {
 		return val
 	}
@@ -297,18 +301,31 @@ func evalFunctionLiteralExpression(node *ast.FunctionLiteralExpression, env *obj
 }
 
 func evalFunctionCallExpression(node *ast.FunctionCallExpression, env *object.Environment) object.Object {
-	fn := Eval(node.Function, env).(*object.Function)
+	obj := Eval(node.Function, env)
 	args := Eval(node.Args, env).(*object.Array)
 
-	// start function own scope and inherit from outter scope
-	fnEnv := object.NewEnvironmentWithParent(fn.Environment)
+	switch obj.Type() {
 
-	// bind args to params
-	for k, v := range args.Value {
-		fnEnv.Set(fn.Parameters[k].Value, v)
+	case object.OBJECT_FUNCTION:
+		fn := obj.(*object.Function)
+
+		// start function own scope and inherit from outter scope
+		fnEnv := object.NewEnvironmentWithParent(fn.Environment)
+
+		// bind args to params
+		for k, v := range args.Value {
+			fnEnv.Set(fn.Parameters[k].Value, v)
+		}
+
+		return Eval(fn.Body, fnEnv)
+
+	default:
+		if builtinFun, ok := obj.(BuiltinFn); ok {
+			return builtinFun(args.Value...)
+		}
+
+		return NILL
 	}
-
-	return Eval(fn.Body, fnEnv)
 }
 
 func evalReturnStatement(node *ast.ReturnStatement, env *object.Environment) object.Object {

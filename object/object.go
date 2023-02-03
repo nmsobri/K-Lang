@@ -19,6 +19,7 @@ const (
 	OBJECT_HASHMAP  = "OBJECT_HASHMAP"
 	OBJECT_FUNCTION = "OBJECT_FUNCTION"
 	OBJECT_RETURN   = "OBJECT_RETURN"
+	OBJECT_BUILTIN  = "OBJECT_BUILTIN"
 )
 
 type Object interface {
@@ -43,7 +44,7 @@ type String struct {
 }
 
 func (s *String) Inspect() string {
-	return s.Value
+	return fmt.Sprintf("%s", s.Value)
 }
 
 func (s *String) Type() ObjectType {

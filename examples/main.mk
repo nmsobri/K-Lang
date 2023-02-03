@@ -1,9 +1,15 @@
 let age = 44;
+print("Age is", age);
+
 let name = "sobri";
+print("Name is", name)
 
 let result = 1 + 2 * 3;
+print(result)
 
-let arr = [6, 7, 8, 9];
+let arr = [6, 7, 8, 9, 11];
+print(arr[2])
+print("arr len is", len(arr))
 
 let user = {
 	"name": "sobri",
@@ -11,18 +17,24 @@ let user = {
 	"location": "Penang"
 }
 
-if true {
-	return 1;
-} else {
-	return 2;
-}
+print(user["name"]);
+print(user["location"]);
 
-while 10 > 1 {
-	10;
+let num = 5;
+
+while num > 0 {
+	print("Hello:", num);
+	num = num -1;
 }
 
 let adder = fn(x) {
-	return x + 2;
+	print( x + 2 );
 }
 
-adder(3)
+adder(8)
+
+let message = "hello world\n"
+
+print(message)
+print(message)
+print("bar\n")

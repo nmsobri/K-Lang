@@ -6,7 +6,6 @@ import (
 	"Klang/object"
 	"Klang/parser"
 	"Klang/repl"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 func main() {
 	if len(os.Args) > 1 {
+
 		contentBuff, err := ioutil.ReadFile(os.Args[1])
 		content := string(contentBuff)
 
@@ -26,8 +26,7 @@ func main() {
 		p := parser.New(l)
 		program := p.ParseProgram()
 
-		evaluated := eval.Eval(program, env)
-		fmt.Println(evaluated.Inspect())
+		eval.Eval(program, env)
 	} else {
 		repl.Start()
 	}
